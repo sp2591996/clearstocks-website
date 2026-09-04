@@ -1,0 +1,331 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stock Screener — ClearStocks</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#7C3AED">
+<style>
+.scr-head{padding:36px 0 8px;}
+.scr-head h1{font-size:28px;}
+.scr-head p{color:var(--text-muted);margin-top:6px;font-size:14.5px;}
+
+.popular-screens{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 28px;}
+.pscreen{
+  font-size:13px;font-weight:600;padding:7px 14px;border-radius:100px;
+  border:1px solid var(--border);background:var(--card);cursor:pointer;color:var(--text-muted);
+}
+.pscreen.active{background:var(--grad);color:#fff;border-color:transparent;}
+
+.summary-picker{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-bottom:32px;}
+@media (max-width:960px){.summary-picker{grid-template-columns:repeat(3,1fr);}}
+@media (max-width:600px){.summary-picker{grid-template-columns:repeat(2,1fr);}}
+.summary-card{
+  border:1px solid var(--border);border-radius:10px;padding:14px 12px;background:var(--card);
+  cursor:pointer;text-align:left;transition:border-color .12s, transform .12s;
+}
+.summary-card:hover{border-color:var(--accent);}
+.summary-card.active{border-color:var(--accent);background:var(--accent-bg);}
+.summary-card .ic{font-size:18px;}
+.summary-card .t{font-weight:700;font-size:13.5px;margin-top:6px;}
+.summary-card .d{font-size:11.5px;color:var(--text-muted);margin-top:2px;line-height:1.4;}
+
+.layout{display:grid;grid-template-columns:250px 1fr;gap:22px;align-items:flex-start;}
+@media (max-width:900px){.layout{grid-template-columns:1fr;}}
+
+.filters{position:sticky;top:80px;}
+.f-group{padding:16px 16px;border-bottom:1px solid var(--border);}
+.f-group:last-child{border-bottom:none;}
+.f-group .f-label{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--text);margin-bottom:10px;}
+.f-radio{display:flex;align-items:center;gap:8px;font-size:13.5px;color:var(--text-muted);padding:4px 0;cursor:pointer;}
+.f-radio input{accent-color:var(--accent);}
+select.f-select{
+  width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:7px;
+  font-size:13.5px;font-family:"Inter",sans-serif;background:var(--card);color:var(--text);
+}
+.filter-reset{width:100%;margin-top:4px;}
+.results-head{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:10px;}
+.results-count{font-size:13.5px;color:var(--text-muted);}
+.results-count b{color:var(--text);}
+.sort-select{font-size:13px;font-family:"Inter",sans-serif;border:1px solid var(--border);border-radius:7px;padding:6px 10px;background:var(--card);color:var(--text);}
+th.sortable{cursor:pointer;user-select:none;}
+th.sortable:hover{color:var(--text);}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="logo" href="index.html"><span class="mark">CS</span>ClearStocks</a>
+    <div class="nav-links">
+      <a href="index.html#markets">Markets</a>
+      <a href="screener.html" class="active">Screener</a>
+      <a href="how-it-works.html">How It Works</a>
+      <a href="about.html">About</a>
+    </div>
+    <div class="nav-right">
+      <div class="search-box" style="position:relative;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input id="global-search" type="text" placeholder="Search ticker or company">
+        <div id="search-results" style="display:none;position:absolute;top:calc(100% + 8px);right:0;width:320px;background:var(--card);border:1px solid var(--border);border-radius:10px;box-shadow:0 16px 40px -12px rgba(0,0,0,.6);overflow:hidden;"></div>
+      </div>
+      <a class="btn" href="contact.html">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<main class="container">
+  <div class="scr-head">
+    <h1>Stock Screener</h1>
+    <p>Find stocks based on price, sector, Insight Score and valuation — across all 200 Nifty stocks.</p>
+  </div>
+  <div id="banner-slot"></div>
+
+  <div class="popular-screens" id="popular-screens">
+    <span class="pscreen active" data-screen="all">All Stocks</span>
+    <span class="pscreen" data-screen="gainers">Top Gainers</span>
+    <span class="pscreen" data-screen="losers">Top Losers</span>
+    <span class="pscreen" data-screen="largecap">Large Cap</span>
+  </div>
+
+  <div style="margin-bottom:10px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--text-muted);">What are you looking for?</div>
+  <div class="summary-picker" id="summary-picker">
+    <div class="summary-card" data-summary="growth"><div class="ic">🚀</div><div class="t">Growth</div><div class="d">Fast-growing, high-momentum companies</div></div>
+    <div class="summary-card" data-summary="value"><div class="ic">💰</div><div class="t">Value</div><div class="d">Potentially inexpensive vs. sector</div></div>
+    <div class="summary-card" data-summary="strongest"><div class="ic">⭐</div><div class="t">Strongest Picks</div><div class="d">High Insight Score + cheap valuation</div></div>
+    <div class="summary-card" data-summary="momentum"><div class="ic">📈</div><div class="t">Momentum</div><div class="d">Strong recent price performance</div></div>
+    <div class="summary-card" data-summary="largecap"><div class="ic">🏢</div><div class="t">Large Cap</div><div class="d">Established, larger companies</div></div>
+    <div class="summary-card active" data-summary="all"><div class="ic">🔎</div><div class="t">All Stocks</div><div class="d">Browse the full universe</div></div>
+  </div>
+
+  <div class="layout">
+    <aside class="card filters">
+      <div class="f-group">
+        <div class="f-label">Search</div>
+        <input class="f-select" id="filter-search" type="text" placeholder="Symbol or company">
+      </div>
+      <div class="f-group">
+        <div class="f-label">Sector</div>
+        <select class="f-select" id="filter-sector"><option value="">All sectors</option></select>
+      </div>
+      <div class="f-group">
+        <div class="f-label">Valuation</div>
+        <select class="f-select" id="filter-valuation">
+          <option value="">Any</option>
+          <option value="Cheap">Cheap</option>
+          <option value="Fair">Fair</option>
+          <option value="Expensive">Expensive</option>
+        </select>
+      </div>
+      <div class="f-group">
+        <div class="f-label">Insight Score <span class="info-dot">?<span class="tip">Our plain-language name for the model's rank — how strongly its history-based signals point toward this stock, from 0 (weak) to 100 (strong).</span></span></div>
+        <label class="f-radio"><input type="radio" name="ml" value="" checked> Any</label>
+        <label class="f-radio"><input type="radio" name="ml" value="70"> Above average (70+)</label>
+        <label class="f-radio"><input type="radio" name="ml" value="85"> Strong (85+)</label>
+      </div>
+      <div class="f-group">
+        <div class="f-label">1D Change</div>
+        <label class="f-radio"><input type="radio" name="chg" value="" checked> Any</label>
+        <label class="f-radio"><input type="radio" name="chg" value="pos"> Positive today</label>
+        <label class="f-radio"><input type="radio" name="chg" value="neg"> Negative today</label>
+      </div>
+      <div class="f-group">
+        <div class="f-label">52-week position <span class="info-dot">?<span class="tip">Where the current price sits between its lowest and highest price over the past year.</span></span></div>
+        <label class="f-radio"><input type="radio" name="w52" value="" checked> Any</label>
+        <label class="f-radio"><input type="radio" name="w52" value="near_low"> Near 52-week low</label>
+        <label class="f-radio"><input type="radio" name="w52" value="near_high"> Near 52-week high</label>
+      </div>
+      <div class="f-group">
+        <div class="f-label">Company size</div>
+        <label class="f-radio"><input type="radio" name="cap" value="" checked> Any</label>
+        <label class="f-radio"><input type="radio" name="cap" value="large"> Large cap (₹2L Cr+)</label>
+        <label class="f-radio"><input type="radio" name="cap" value="mid"> Mid cap (₹20K-2L Cr)</label>
+        <label class="f-radio"><input type="radio" name="cap" value="small"> Small cap (&lt;₹20K Cr)</label>
+      </div>
+      <div class="f-group">
+        <div class="f-label">Profitability (ROE) <span class="info-dot">?<span class="tip">Return on Equity — roughly, how much profit a company makes for every rupee shareholders have invested. Higher usually means more efficient.</span></span></div>
+        <label class="f-radio"><input type="radio" name="roe" value="" checked> Any</label>
+        <label class="f-radio"><input type="radio" name="roe" value="15"> Above 15%</label>
+        <label class="f-radio"><input type="radio" name="roe" value="25"> Above 25%</label>
+      </div>
+      <div class="f-group">
+        <div class="f-label">P/E Ratio <span class="info-dot">?<span class="tip">Price-to-Earnings — how many years of current profit it would take to "earn back" the share price. Lower can mean cheaper, but context (sector, growth) matters.</span></span></div>
+        <label class="f-radio"><input type="radio" name="pe" value="" checked> Any</label>
+        <label class="f-radio"><input type="radio" name="pe" value="20"> Under 20</label>
+        <label class="f-radio"><input type="radio" name="pe" value="35"> Under 35</label>
+      </div>
+      <div class="f-group">
+        <button class="btn filter-reset" id="filter-reset">Reset filters</button>
+      </div>
+    </aside>
+
+    <section class="card">
+      <div class="results-head">
+        <span class="results-count"><b id="result-count">0</b> stocks</span>
+        <select class="sort-select" id="sort-select">
+          <option value="ml_desc">Sort: Insight Score (high to low)</option>
+          <option value="cap_desc">Sort: Market Cap</option>
+          <option value="chg_desc">Sort: 1D Change</option>
+          <option value="alpha">Sort: Alphabetical</option>
+        </select>
+      </div>
+      <div style="overflow-x:auto;">
+        <table id="results-table">
+          <thead>
+            <tr>
+              <th>Symbol</th><th>Company</th><th>Price</th><th>1D Change</th>
+              <th>Market Cap</th><th>Sector</th>
+              <th>Insight Score <span class="info-dot">?<span class="tip">Model rank from 0-100, based on historical fundamentals. Not a price prediction.</span></span></th>
+              <th>Verdict</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-links">
+      <a href="about.html">About</a>
+      <a href="how-it-works.html">How It Works</a>
+      <a href="disclaimer.html">Disclaimers</a>
+      <a href="contact.html">Contact</a>
+    </div>
+    <p class="footer-note">ClearStocks is an independent, personal project covering the Nifty 200. Nothing on this site is investment advice or a recommendation to buy or sell any security — see the full <a href="disclaimer.html" style="color:var(--accent);">disclaimer</a>. Data from Yahoo Finance, NSE and RBI.</p>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+<script>
+const SUMMARY_SCREENS = {
+  growth: s => s.roe != null && s.roe > 18,
+  value: s => (s.valuation_verdict||"").startsWith("Cheap"),
+  strongest: s => (s.interpretation||"").startsWith("STRONGEST"),
+  momentum: s => s.day_change_pct > 1.5,
+  largecap: s => s.market_cap != null && s.market_cap > 200000,
+  all: () => true,
+};
+
+let activeSummary = "all";
+
+function populateSectorFilter() {
+  const sectors = [...new Set(STOCKS.map(s=>s.sector))].sort();
+  const sel = document.getElementById("filter-sector");
+  sectors.forEach(sec => { const o=document.createElement("option"); o.value=sec; o.textContent=sec; sel.appendChild(o); });
+}
+
+function applyFilters() {
+  const q = document.getElementById("filter-search").value.trim().toUpperCase();
+  const sector = document.getElementById("filter-sector").value;
+  const valuation = document.getElementById("filter-valuation").value;
+  const mlMin = +(document.querySelector('input[name="ml"]:checked').value || 0);
+  const chg = document.querySelector('input[name="chg"]:checked').value;
+  const w52 = document.querySelector('input[name="w52"]:checked').value;
+  const cap = document.querySelector('input[name="cap"]:checked').value;
+  const roeMin = +(document.querySelector('input[name="roe"]:checked').value || 0);
+  const peMax = +(document.querySelector('input[name="pe"]:checked').value || 0);
+  const sortMode = document.getElementById("sort-select").value;
+
+  let rows = STOCKS.filter(SUMMARY_SCREENS[activeSummary]);
+  if (q) rows = rows.filter(s => s.symbol.includes(q) || s.name.toUpperCase().includes(q));
+  if (sector) rows = rows.filter(s => s.sector === sector);
+  if (valuation) rows = rows.filter(s => (s.valuation_verdict||"").startsWith(valuation));
+  if (mlMin) rows = rows.filter(s => (s.ml_percentile||0) >= mlMin);
+  if (chg === "pos") rows = rows.filter(s => s.day_change_pct > 0);
+  if (chg === "neg") rows = rows.filter(s => s.day_change_pct < 0);
+  if (w52 === "near_low") rows = rows.filter(s => s.week52_low != null && s.current_price != null && s.current_price <= s.week52_low * 1.10);
+  if (w52 === "near_high") rows = rows.filter(s => s.week52_high != null && s.current_price != null && s.current_price >= s.week52_high * 0.90);
+  if (cap === "large") rows = rows.filter(s => (s.market_cap||0) >= 200000);
+  if (cap === "mid") rows = rows.filter(s => (s.market_cap||0) >= 20000 && (s.market_cap||0) < 200000);
+  if (cap === "small") rows = rows.filter(s => (s.market_cap||0) < 20000);
+  if (roeMin) rows = rows.filter(s => (s.roe||0) >= roeMin);
+  if (peMax) rows = rows.filter(s => s.pe_ratio != null && s.pe_ratio <= peMax);
+
+  if (sortMode === "ml_desc") rows.sort((a,b)=>(b.ml_percentile||0)-(a.ml_percentile||0));
+  else if (sortMode === "cap_desc") rows.sort((a,b)=>(b.market_cap||0)-(a.market_cap||0));
+  else if (sortMode === "chg_desc") rows.sort((a,b)=>b.day_change_pct-a.day_change_pct);
+  else if (sortMode === "alpha") rows.sort((a,b)=>a.symbol.localeCompare(b.symbol));
+
+  renderResults(rows);
+}
+
+function renderResults(rows) {
+  document.getElementById("result-count").textContent = rows.length;
+  document.querySelector("#results-table tbody").innerHTML = rows.map(s => `
+    <tr data-symbol="${s.symbol}">
+      <td class="sym">${s.symbol}</td>
+      <td class="company-name">${s.name}</td>
+      <td class="num">${fmtPrice(s.current_price)}</td>
+      <td class="chg ${chgClass(s.day_change_pct)} num">${fmtPct(s.day_change_pct)}</td>
+      <td class="num">${fmtCap(s.market_cap)}</td>
+      <td style="color:var(--text-muted);font-size:13px;">${s.sector}</td>
+      <td class="num">${scoreBadge(s.ml_percentile)}</td>
+      <td><span class="pill ${verdictClass(s.valuation_verdict)}">${(s.valuation_verdict||"—").split(" (")[0]}</span></td>
+    </tr>`).join("");
+}
+
+(async function init() {
+  await loadStockData();
+  document.getElementById("banner-slot").innerHTML = sampleBanner();
+  populateSectorFilter();
+  initNav();
+
+  // Honor a ?screen=growth|value|strongest|momentum|largecap link from
+  // the homepage's quick-filter buttons (index.html) — those linked here
+  // but this page never read the parameter, so "Growth"/"Value"/
+  // "Momentum" all silently landed on the unfiltered, 200-stock view
+  // (found via QA). Apply it as if the matching filter card were clicked.
+  const screenParam = new URLSearchParams(window.location.search).get("screen");
+  if (screenParam && SUMMARY_SCREENS[screenParam]) {
+    activeSummary = screenParam;
+    document.querySelectorAll('.summary-card').forEach(x =>
+      x.classList.toggle('active', x.dataset.summary === screenParam));
+  }
+
+  applyFilters();
+
+  ["filter-search","filter-sector","filter-valuation","sort-select"].forEach(id =>
+    document.getElementById(id).addEventListener("input", applyFilters));
+  document.querySelectorAll('input[name="ml"], input[name="chg"]').forEach(el => el.addEventListener("change", applyFilters));
+  document.getElementById("filter-reset").onclick = () => {
+    document.getElementById("filter-search").value = "";
+    document.getElementById("filter-sector").value = "";
+    document.getElementById("filter-valuation").value = "";
+    ["ml","chg","w52","cap","roe","pe"].forEach(name => {
+      document.querySelector(`input[name="${name}"][value=""]`).checked = true;
+    });
+    applyFilters();
+  };
+  document.querySelectorAll('.summary-card').forEach(el => el.onclick = () => {
+    document.querySelectorAll('.summary-card').forEach(x=>x.classList.remove('active'));
+    el.classList.add('active');
+    activeSummary = el.dataset.summary;
+    applyFilters();
+  });
+  document.querySelectorAll('.pscreen').forEach(el => el.onclick = () => {
+    document.querySelectorAll('.pscreen').forEach(x=>x.classList.remove('active'));
+    el.classList.add('active');
+    const s = el.dataset.screen;
+    document.querySelector('input[name="chg"][value=""]').checked = true;
+    if (s === "gainers") document.querySelector('input[name="chg"][value="pos"]').checked = true;
+    if (s === "losers") document.querySelector('input[name="chg"][value="neg"]').checked = true;
+    activeSummary = s === "largecap" ? "largecap" : "all";
+    document.querySelectorAll('.summary-card').forEach(x=>x.classList.toggle('active', x.dataset.summary === activeSummary));
+    applyFilters();
+  });
+  document.body.addEventListener('click', (e) => {
+    const row = e.target.closest('tr[data-symbol]');
+    if (row) window.location.href = `stock.html?symbol=${row.dataset.symbol}`;
+  });
+})();
+</script>
+</body>
+</html>

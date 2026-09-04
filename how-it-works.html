@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>How It Works — ClearStocks</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .hiw-hero{padding:48px 0 24px;text-align:center;max-width:640px;margin:0 auto;}
+  .hiw-hero p{color:var(--text-muted);font-size:15px;margin-top:10px;line-height:1.6;}
+  .flow{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:36px 0;}
+  @media (max-width:900px){.flow{grid-template-columns:1fr 1fr;}}
+  .flow-step{padding:22px;position:relative;}
+  .flow-step .n{font-family:"IBM Plex Mono",monospace;font-size:12px;color:var(--accent);font-weight:700;margin-bottom:10px;}
+  .flow-step h4{font-size:15.5px;margin-bottom:8px;}
+  .flow-step p{font-size:13px;color:var(--text-muted);line-height:1.6;}
+  .faq{max-width:760px;margin:0 auto;padding:20px 0 60px;}
+  .faq-item{border-bottom:1px solid var(--border);padding:20px 0;}
+  .faq-item h4{font-size:15px;margin-bottom:8px;}
+  .faq-item p{font-size:13.5px;color:var(--text-muted);line-height:1.7;}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="logo" href="index.html"><span class="mark">CS</span>ClearStocks</a>
+    <div class="nav-links">
+      <a href="index.html#markets">Markets</a>
+      <a href="screener.html">Screener</a>
+      <a href="how-it-works.html" class="active">How It Works</a>
+      <a href="about.html">About</a>
+    </div>
+    <div class="nav-right">
+      <div class="search-box" style="position:relative;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input id="global-search" type="text" placeholder="Search stocks...">
+        <div id="search-results" class="search-results card" style="display:none;position:absolute;top:130%;right:0;width:280px;max-height:320px;overflow-y:auto;padding:6px;"></div>
+      </div>
+      <a class="btn" href="contact.html">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="hiw-hero">
+    <div class="eyebrow">How It Works</div>
+    <h1 style="font-size:30px;margin-top:8px;">A quantitative screener for the Nifty 200</h1>
+    <p>This site ranks all 200 stocks in the Nifty 200 index using a machine-learning model trained on historical fundamentals, and separately checks whether each stock looks cheap or expensive versus its own sector right now. Here's exactly how that works, step by step.</p>
+  </div>
+
+  <div class="flow">
+    <div class="card flow-step"><div class="n">STEP 1</div><h4>Find</h4><p>Every stock in the Nifty 200 is scored — you can search by name, browse the full list, or jump straight to the screener with filters.</p></div>
+    <div class="card flow-step"><div class="n">STEP 2</div><h4>Explore</h4><p>Each stock has its own page with price, financial ratios, valuation, and the model's rank — so you can see exactly why it landed where it did.</p></div>
+    <div class="card flow-step"><div class="n">STEP 3</div><h4>Filter</h4><p>The screener lets you narrow by sector, valuation, ML score, price movement, and more — or start from a "Growth", "Value" or "Momentum" preset.</p></div>
+    <div class="card flow-step"><div class="n">STEP 4</div><h4>Understand</h4><p>Nothing here is a buy/sell tip. Every score is a data point to research further, not a conclusion — see our disclaimer for the full picture.</p></div>
+  </div>
+
+  <div class="faq">
+    <div class="faq-item">
+      <h4>Where does the data come from?</h4>
+      <p>Company fundamentals (revenue, profit, debt, capital expenditure, etc.) are pulled from public financial data sources for all Nifty 200 companies. Prices are pulled from market data feeds.</p>
+    </div>
+    <div class="faq-item">
+      <h4>How often is this updated?</h4>
+      <p>The ML rankings and fundamentals are refreshed manually, roughly whenever new quarterly results come out. Prices update automatically through the day (delayed by about 15-20 minutes) during NSE market hours — they are not real-time.</p>
+    </div>
+    <div class="faq-item">
+      <h4>Is this real-time data?</h4>
+      <p>No. Prices are delayed by roughly 15-20 minutes, and the underlying model scores are only as fresh as the last manual refresh. This is a research tool, not a live trading terminal.</p>
+    </div>
+    <div class="faq-item">
+      <h4>Does this site recommend which stocks to buy?</h4>
+      <p>No. The ML score and valuation verdict are analytical outputs of a specific model with specific assumptions and known limitations. They are not investment advice or a recommendation to buy, hold, or sell anything. See the <a href="disclaimer.html" style="color:var(--accent);">full disclaimer</a>.</p>
+    </div>
+    <div class="faq-item">
+      <h4>What does the ML Score actually measure?</h4>
+      <p>It's a model trained on historical company fundamentals to estimate how a stock's future 3-month return might rank relative to its peers, based on patterns found in past data. Past patterns are not a guarantee of future results.</p>
+    </div>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <div>
+      <div class="logo" style="margin-bottom:10px;"><span class="mark">CS</span>ClearStocks</div>
+      <div class="footer-note">Educational research tool built by an individual investor. Not investment advice, not a recommendation to buy or sell any security. See our <a href="disclaimer.html" style="text-decoration:underline;">full disclaimer</a>.</div>
+    </div>
+    <div class="footer-links">
+      <a href="index.html">Home</a>
+      <a href="screener.html">Screener</a>
+      <a href="how-it-works.html">How It Works</a>
+      <a href="about.html">About</a>
+      <a href="disclaimer.html">Disclaimer</a>
+      <a href="contact.html">Contact</a>
+    </div>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+<script>
+(async function init() {
+  await loadStockData();
+  initNav();
+  document.body.addEventListener("click", (e) => {
+    const row = e.target.closest("[data-symbol]");
+    if (row) window.location.href = `stock.html?symbol=${row.dataset.symbol}`;
+  });
+})();
+</script>
+</body>
+</html>

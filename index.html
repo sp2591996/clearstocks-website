@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ClearStocks — Market data, made simple</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#7C3AED">
+<style>
+.hero{
+  position:relative;overflow:hidden;text-align:center;padding:80px 0 60px;
+  background:var(--bg);
+}
+.hero::before{
+  content:"";position:absolute;top:-220px;left:50%;transform:translateX(-50%);
+  width:900px;height:500px;border-radius:50%;
+  background:radial-gradient(ellipse, rgba(139,92,246,.22), transparent 70%);
+  pointer-events:none;
+}
+.hero > *{position:relative;z-index:1;}
+.hero .eyebrow{
+  display:inline-block;margin-bottom:18px;color:var(--text-muted);background:var(--card);
+  border:1px solid var(--border);padding:6px 14px;border-radius:100px;
+  font-weight:600;letter-spacing:.04em;
+}
+.hero h1{font-size:44px;max-width:760px;margin:0 auto;color:var(--text);line-height:1.2;}
+.hero h1 .grad-text{background:linear-gradient(120deg,#C4B5FD,#F9A8D4);-webkit-background-clip:text;background-clip:text;color:transparent;}
+.hero p.sub{max-width:540px;margin:16px auto 0;color:var(--text-muted);font-size:15.5px;}
+.hero-search{
+  max-width:600px;margin:32px auto 0;display:flex;align-items:center;gap:10px;
+  background:var(--card);border:1.5px solid var(--border);border-radius:14px;
+  padding:15px 20px;
+}
+.hero-search svg{color:var(--text-muted);flex-shrink:0;}
+.hero-search input{flex:1;border:none;outline:none;font-size:16px;font-family:"Inter",sans-serif;background:none;color:var(--text);}
+.hero-search input::placeholder{color:var(--text-muted);}
+.hero-search kbd{
+  font-family:"IBM Plex Mono",monospace;font-size:11.5px;color:var(--text-muted);
+  border:1px solid var(--border);border-radius:5px;padding:2px 6px;background:var(--card-2);
+}
+.hero-tags{display:flex;justify-content:center;gap:8px;margin-top:18px;flex-wrap:wrap;}
+.hero-tags a{
+  font-size:13px;font-weight:700;color:var(--text);
+  border:1px solid var(--border);border-radius:100px;padding:6px 14px;background:var(--card);
+}
+.hero-tags a:hover{background:var(--grad);border-color:transparent;color:#fff;}
+.hero-tags a:last-child{background:var(--grad);border-color:transparent;color:#fff;}
+
+.idx-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--border);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+.idx-tile{background:var(--card);padding:18px 22px;border-top:3px solid transparent;}
+.idx-tile:nth-child(1){border-top-color:var(--accent);}
+.idx-tile:nth-child(2){border-top-color:var(--accent-2);}
+.idx-tile:nth-child(3){border-top-color:var(--gold);}
+.idx-tile:nth-child(4){border-top-color:var(--green);}
+.idx-tile .name{font-size:12.5px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:.03em;}
+.idx-tile .val{font-size:22px;font-weight:700;margin-top:6px;}
+.idx-tile .chg{font-size:13.5px;margin-top:2px;display:block;}
+@media (max-width:760px){.idx-strip{grid-template-columns:repeat(2,1fr);}}
+
+.movers-grid{display:grid;grid-template-columns:1.4fr 1fr;gap:20px;}
+@media (max-width:900px){.movers-grid{grid-template-columns:1fr;}}
+.mover-row{display:flex;align-items:center;justify-content:space-between;padding:11px 18px;border-bottom:1px solid var(--border);}
+.mover-row:last-child{border-bottom:none;}
+.mover-row:hover{background:var(--card-2);cursor:pointer;}
+.mover-left{display:flex;flex-direction:column;}
+.sector-row{display:flex;align-items:center;justify-content:space-between;padding:10px 18px;border-bottom:1px solid var(--border);gap:14px;}
+.sector-row:last-child{border-bottom:none;}
+.sector-bar-track{flex:1;height:6px;border-radius:3px;background:var(--card-2);overflow:hidden;}
+.sector-bar-fill{height:100%;border-radius:3px;}
+.card-title{font-size:14.5px;font-weight:700;padding:16px 18px 12px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;}
+.tab-pills{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;}
+.tab-pill{
+  font-size:13.5px;font-weight:600;padding:7px 14px;border-radius:8px;border:1px solid var(--border);
+  background:var(--card);cursor:pointer;color:var(--text-muted);
+}
+.tab-pill.active{background:var(--grad);color:#fff;border-color:transparent;}
+
+.hiw-band{
+  position:relative;overflow:hidden;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:18px;padding:48px 40px;text-align:center;
+}
+.hiw-band::before{
+  content:"";position:absolute;top:0;left:0;right:0;height:2px;background:var(--grad);
+}
+.hiw-band > *{position:relative;z-index:1;}
+.hiw-band .eyebrow{color:var(--text-muted);background:var(--card-2);border:1px solid var(--border);padding:6px 14px;border-radius:100px;display:inline-block;}
+.hiw-band p{color:var(--text-muted) !important;}
+.hiw-steps{display:flex;justify-content:center;gap:8px;margin:22px 0;flex-wrap:wrap;color:var(--text);font-weight:700;font-size:14px;}
+.hiw-steps span.arrow{color:var(--border);}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="logo" href="index.html"><span class="mark">CS</span>ClearStocks</a>
+    <div class="nav-links">
+      <a href="index.html#markets">Markets</a>
+      <a href="screener.html">Screener</a>
+      <a href="how-it-works.html">How It Works</a>
+      <a href="about.html">About</a>
+    </div>
+    <div class="nav-right">
+      <div class="search-box" style="position:relative;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+        <input id="global-search" type="text" placeholder="Search ticker or company">
+        <div id="search-results" style="display:none;position:absolute;top:calc(100% + 8px);right:0;width:320px;background:var(--card);border:1px solid var(--border);border-radius:10px;box-shadow:0 16px 40px -12px rgba(0,0,0,.6);overflow:hidden;"></div>
+      </div>
+      <a class="btn" href="contact.html">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<main>
+  <section class="hero container">
+    <span class="eyebrow">⚡ Nifty 200 · Free · Updated through the trading day</span>
+    <h1>Explore the stock market <span class="grad-text">with clarity.</span></h1>
+    <p class="sub">Prices, performance, financials and an AI-assisted screener for all 200 Nifty stocks — all in one place, all openly tested.</p>
+    <div class="hero-search">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+      <input type="text" placeholder="Search by company or ticker — e.g. RELIANCE, HDFC Bank">
+      <kbd>/</kbd>
+    </div>
+    <div class="hero-tags">
+      <a href="screener.html?screen=growth">Growth</a>
+      <a href="screener.html?screen=value">Value</a>
+      <a href="screener.html?screen=momentum">Momentum</a>
+      <a href="screener.html">Full Screener →</a>
+    </div>
+  </section>
+
+  <section class="section container" id="markets">
+    <div id="banner-slot"></div>
+    <div class="section-head">
+      <h2 style="font-size:19px;">Market overview</h2>
+      <span style="font-size:12.5px;color:var(--text-muted);" id="updated-label">—</span>
+    </div>
+    <div class="idx-strip" id="idx-strip"></div>
+  </section>
+
+  <section class="section container">
+    <div class="movers-grid">
+      <div class="card">
+        <div class="card-title">
+          Market movers <span style="font-weight:500;color:var(--text-muted);font-size:12px;">(today's price change)</span>
+          <div class="tab-pills" style="margin:0;">
+            <span class="tab-pill active" data-movers="gainers">Gainers</span>
+            <span class="tab-pill" data-movers="losers">Losers</span>
+          </div>
+        </div>
+        <div id="movers-list"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">Sector performance <span style="font-weight:500;color:var(--text-muted);font-size:12px;">(avg. today's change)</span></div>
+        <div id="sector-list"></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section container" id="explore">
+    <div class="section-head">
+      <h2 style="font-size:19px;">Explore stocks</h2>
+      <a href="screener.html" style="font-size:13.5px;font-weight:600;color:var(--accent);">Open full screener →</a>
+    </div>
+    <div class="tab-pills" id="explore-tabs">
+      <span class="tab-pill active" data-filter="all">All Stocks</span>
+      <span class="tab-pill" data-filter="gainers">Gainers</span>
+      <span class="tab-pill" data-filter="losers">Losers</span>
+      <span class="tab-pill" data-filter="active">Strongest Candidates</span>
+    </div>
+    <div class="card" style="overflow-x:auto;">
+      <table id="explore-table">
+        <thead><tr><th>Symbol</th><th>Company</th><th>Price</th><th>1D Change</th><th>Sector</th><th>Verdict <span class="info-dot">?<span class="tip">Cheap/Fair/Expensive compares the stock's price to others in its own sector right now — not to its own past price.</span></span></th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="section container">
+    <div class="hiw-band">
+      <span class="eyebrow">How it works</span>
+      <h2 style="font-size:26px;margin-top:10px;">Search → Compare → Understand</h2>
+      <p style="color:var(--text-muted);max-width:480px;margin:12px auto 0;">Every score on this site comes from a model that's been walk-forward tested, stress-tested through a real crash, and had its failures documented right alongside its wins.</p>
+      <div class="hiw-steps">
+        <span>Find a stock</span><span class="arrow">→</span><span>See its score</span><span class="arrow">→</span><span>Read why</span><span class="arrow">→</span><span>Decide for yourself</span>
+      </div>
+      <a class="btn primary" href="how-it-works.html">Learn how it works</a>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="footer-inner">
+    <div class="footer-links">
+      <a href="about.html">About</a>
+      <a href="how-it-works.html">How It Works</a>
+      <a href="disclaimer.html">Disclaimers</a>
+      <a href="contact.html">Contact</a>
+    </div>
+    <p class="footer-note">ClearStocks is an independent, personal project covering the Nifty 200. Nothing on this site is investment advice or a recommendation to buy or sell any security — see the full <a href="disclaimer.html" style="color:var(--accent);">disclaimer</a>. Data from Yahoo Finance, NSE and RBI.</p>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+<script>
+const SECTOR_COLOR = { pos: "#16A34A", neg: "#E11D48", flat: "#94A3B8" };
+
+function renderIndices() {
+  document.getElementById("idx-strip").innerHTML = SAMPLE_INDICES.map(i => `
+    <div class="idx-tile">
+      <div class="name">${i.name}</div>
+      <div class="val num">${i.value.toLocaleString("en-IN")}</div>
+      <span class="chg ${chgClass(i.change_pct)} num">${fmtPct(i.change_pct)} <span style="font-weight:500;color:var(--text-muted);font-size:11px;">today</span></span>
+    </div>`).join("");
+}
+
+function renderMovers(kind) {
+  const sorted = [...STOCKS].sort((a,b) => kind === "gainers" ? b.day_change_pct - a.day_change_pct : a.day_change_pct - b.day_change_pct);
+  document.getElementById("movers-list").innerHTML = sorted.slice(0,6).map(s => `
+    <div class="mover-row" data-symbol="${s.symbol}">
+      <div class="mover-left"><span class="sym">${s.symbol}</span><span class="company-name">${s.name}</span></div>
+      <div style="text-align:right;">
+        <div class="num">${fmtPrice(s.current_price)}</div>
+        <div class="chg ${chgClass(s.day_change_pct)} num" style="font-size:12.5px;">${fmtPct(s.day_change_pct)}</div>
+      </div>
+    </div>`).join("");
+}
+
+function renderSectors() {
+  const bySector = {};
+  STOCKS.forEach(s => { (bySector[s.sector] ||= []).push(s.day_change_pct); });
+  const rows = Object.entries(bySector).map(([sector, vals]) => ({
+    sector, avg: vals.reduce((a,b)=>a+b,0)/vals.length
+  })).sort((a,b) => b.avg - a.avg);
+  const maxAbs = Math.max(...rows.map(r => Math.abs(r.avg)), 1);
+  document.getElementById("sector-list").innerHTML = rows.map(r => `
+    <div class="sector-row">
+      <span style="font-size:13.5px;flex-shrink:0;width:150px;">${r.sector}</span>
+      <div class="sector-bar-track"><div class="sector-bar-fill" style="width:${Math.min(100, Math.abs(r.avg)/maxAbs*100)}%;background:${r.avg>=0?SECTOR_COLOR.pos:SECTOR_COLOR.neg};margin-left:${r.avg<0?0:0}%;"></div></div>
+      <span class="chg ${chgClass(r.avg)} num" style="width:56px;text-align:right;flex-shrink:0;">${fmtPct(r.avg)}</span>
+    </div>`).join("");
+}
+
+function renderExplore(filter) {
+  let rows = [...STOCKS];
+  if (filter === "gainers") rows = rows.filter(s=>s.day_change_pct>0).sort((a,b)=>b.day_change_pct-a.day_change_pct);
+  else if (filter === "losers") rows = rows.filter(s=>s.day_change_pct<0).sort((a,b)=>a.day_change_pct-b.day_change_pct);
+  else if (filter === "active") rows = rows.filter(s=>s.interpretation && s.interpretation.startsWith("STRONGEST"));
+  rows = rows.slice(0, 10);
+  document.querySelector("#explore-table tbody").innerHTML = rows.map(s => `
+    <tr data-symbol="${s.symbol}">
+      <td class="sym">${s.symbol}</td>
+      <td class="company-name">${s.name}</td>
+      <td class="num">${fmtPrice(s.current_price)}</td>
+      <td class="chg ${chgClass(s.day_change_pct)} num">${fmtPct(s.day_change_pct)}</td>
+      <td style="color:var(--text-muted);font-size:13px;">${s.sector}</td>
+      <td><span class="pill ${verdictClass(s.valuation_verdict)}">${(s.valuation_verdict||"—").split(" (")[0]}</span></td>
+    </tr>`).join("");
+}
+
+function goToStock(symbol) { window.location.href = `stock.html?symbol=${symbol}`; }
+
+(async function init() {
+  await loadStockData();
+  document.getElementById("banner-slot").innerHTML = sampleBanner();
+  document.getElementById("updated-label").textContent = LAST_UPDATED ? `Updated ${LAST_UPDATED}` : "Example data — not live";
+  renderIndices();
+  renderMovers("gainers");
+  renderSectors();
+  renderExplore("all");
+  initNav();
+
+  document.querySelectorAll('[data-movers]').forEach(el => el.onclick = () => {
+    document.querySelectorAll('[data-movers]').forEach(x=>x.classList.remove('active'));
+    el.classList.add('active');
+    renderMovers(el.dataset.movers);
+  });
+  document.querySelectorAll('#explore-tabs [data-filter]').forEach(el => el.onclick = () => {
+    document.querySelectorAll('#explore-tabs [data-filter]').forEach(x=>x.classList.remove('active'));
+    el.classList.add('active');
+    renderExplore(el.dataset.filter);
+  });
+  document.body.addEventListener('click', (e) => {
+    const row = e.target.closest('[data-symbol]');
+    if (row) goToStock(row.dataset.symbol);
+  });
+})();
+</script>
+</body>
+</html>

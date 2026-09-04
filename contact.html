@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contact — ClearStocks</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .contact-wrap{max-width:560px;margin:0 auto;padding:48px 0 70px;}
+  .contact-wrap h1{font-size:28px;margin-bottom:8px;text-align:center;}
+  .contact-wrap p.lead{text-align:center;color:var(--text-muted);font-size:14px;margin-bottom:30px;}
+  .field{margin-bottom:16px;}
+  .field label{display:block;font-size:13px;font-weight:600;margin-bottom:6px;}
+  .field input, .field select, .field textarea{
+    width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;
+    font-family:"Inter",sans-serif;font-size:14px;background:var(--card);color:var(--text);
+  }
+  .field textarea{resize:vertical;min-height:110px;}
+  .data-issue{background:var(--accent-bg);border:1px solid rgba(139,92,246,.35);border-radius:8px;padding:14px 18px;font-size:13px;color:var(--accent);margin-top:24px;}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="logo" href="index.html"><span class="mark">CS</span>ClearStocks</a>
+    <div class="nav-links">
+      <a href="index.html#markets">Markets</a>
+      <a href="screener.html">Screener</a>
+      <a href="how-it-works.html">How It Works</a>
+      <a href="about.html">About</a>
+    </div>
+    <div class="nav-right">
+      <a class="btn primary" href="contact.html">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="contact-wrap">
+    <div class="eyebrow" style="text-align:center;">Contact</div>
+    <h1>Get in touch</h1>
+    <p class="lead">Questions, feedback, or spotted a data issue? Send a note below.</p>
+
+    <form onsubmit="return false;">
+      <div class="field"><label>Name</label><input type="text" placeholder="Your name"></div>
+      <div class="field"><label>Email</label><input type="email" placeholder="you@example.com"></div>
+      <div class="field">
+        <label>Topic</label>
+        <select>
+          <option>General feedback</option>
+          <option>Data issue / incorrect figure</option>
+          <option>Feature request</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="field"><label>Message</label><textarea placeholder="What's on your mind?"></textarea></div>
+      <button class="btn primary" style="width:100%;padding:12px;">Send message</button>
+    </form>
+
+    <div class="data-issue">&#9432; Found a wrong number on a stock page? Please note the stock symbol and the exact figure so it can be checked quickly.</div>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <div>
+      <div class="logo" style="margin-bottom:10px;"><span class="mark">CS</span>ClearStocks</div>
+      <div class="footer-note">Educational research tool built by an individual investor. Not investment advice, not a recommendation to buy or sell any security. See our <a href="disclaimer.html" style="text-decoration:underline;">full disclaimer</a>.</div>
+    </div>
+    <div class="footer-links">
+      <a href="index.html">Home</a>
+      <a href="screener.html">Screener</a>
+      <a href="how-it-works.html">How It Works</a>
+      <a href="about.html">About</a>
+      <a href="disclaimer.html">Disclaimer</a>
+      <a href="contact.html">Contact</a>
+    </div>
+  </div>
+</footer>
+
+</body>
+</html>

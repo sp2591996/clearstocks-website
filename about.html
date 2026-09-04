@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>About — ClearStocks</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .about-hero{max-width:700px;margin:0 auto;padding:48px 0 20px;text-align:center;}
+  .about-hero p{color:var(--text-muted);font-size:15px;margin-top:12px;line-height:1.7;}
+  .principles{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin:36px 0 56px;}
+  @media (max-width:900px){.principles{grid-template-columns:1fr 1fr;}}
+  .principle{padding:22px;}
+  .principle h4{font-size:15px;margin-bottom:8px;}
+  .principle p{font-size:13px;color:var(--text-muted);line-height:1.6;}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="logo" href="index.html"><span class="mark">CS</span>ClearStocks</a>
+    <div class="nav-links">
+      <a href="index.html#markets">Markets</a>
+      <a href="screener.html">Screener</a>
+      <a href="how-it-works.html">How It Works</a>
+      <a href="about.html" class="active">About</a>
+    </div>
+    <div class="nav-right">
+      <div class="search-box" style="position:relative;">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input id="global-search" type="text" placeholder="Search stocks...">
+        <div id="search-results" class="search-results card" style="display:none;position:absolute;top:130%;right:0;width:280px;max-height:320px;overflow-y:auto;padding:6px;"></div>
+      </div>
+      <a class="btn" href="contact.html">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+  <div class="about-hero">
+    <div class="eyebrow">About</div>
+    <h1 style="font-size:30px;margin-top:8px;">Built by one person, for personal research</h1>
+    <p>This site started as a personal project to systematically screen the Nifty 200 using a machine-learning model and basic valuation checks, instead of relying on gut feeling or scattered news. It's shared publicly so others can use the same tool — but it remains an independent, individually-run research project, not a financial firm or advisory service.</p>
+  </div>
+
+  <div class="principles">
+    <div class="card principle"><h4>Accuracy</h4><p>Every figure traces back to a real data source, and known limitations are documented rather than hidden.</p></div>
+    <div class="card principle"><h4>Clarity</h4><p>Scores and verdicts are explained in plain language, not left as unexplained numbers.</p></div>
+    <div class="card principle"><h4>Independence</h4><p>No paid placements, no sponsored rankings, no brokerage affiliation influencing any score.</p></div>
+    <div class="card principle"><h4>Transparency</h4><p>The methodology, its assumptions, and its failure modes are described openly in How It Works.</p></div>
+  </div>
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <div>
+      <div class="logo" style="margin-bottom:10px;"><span class="mark">CS</span>ClearStocks</div>
+      <div class="footer-note">Educational research tool built by an individual investor. Not investment advice, not a recommendation to buy or sell any security. See our <a href="disclaimer.html" style="text-decoration:underline;">full disclaimer</a>.</div>
+    </div>
+    <div class="footer-links">
+      <a href="index.html">Home</a>
+      <a href="screener.html">Screener</a>
+      <a href="how-it-works.html">How It Works</a>
+      <a href="about.html">About</a>
+      <a href="disclaimer.html">Disclaimer</a>
+      <a href="contact.html">Contact</a>
+    </div>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+<script>(async function(){ await loadStockData(); initNav(); document.body.addEventListener("click",e=>{const r=e.target.closest("[data-symbol]"); if(r) window.location.href=`stock.html?symbol=${r.dataset.symbol}`;}); })();</script>
+</body>
+</html>

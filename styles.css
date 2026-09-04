@@ -1,0 +1,229 @@
+:root{
+  --bg:#0A0A12;
+  --card:#131320;
+  --card-2:#1C1C2E;
+  --text:#F3F1FA;
+  --text-muted:#8D89A6;
+  --border:#26263B;
+  --green:#22C55E;
+  --green-bg:rgba(34,197,94,.14);
+  --red:#F43F5E;
+  --red-bg:rgba(244,63,94,.14);
+  --accent:#8B5CF6;
+  --accent-2:#EC4899;
+  --accent-bg:rgba(139,92,246,.16);
+  --gold:#F59E0B;
+  --gold-bg:rgba(245,158,11,.14);
+  --violet:#8B5CF6;
+  --grad: linear-gradient(120deg, var(--accent), var(--accent-2));
+  --ink:#F3F1FA;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{
+  background:var(--bg);
+  color:var(--text);
+  font-family:"Inter", -apple-system, "Segoe UI", sans-serif;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+h1,h2,h3,h4{
+  font-family:"Manrope", "Inter", sans-serif;
+  font-weight:800;
+  margin:0;
+  text-wrap:balance;
+  letter-spacing:-0.01em;
+}
+a{color:inherit;text-decoration:none;}
+.num{font-family:"IBM Plex Mono", monospace; font-variant-numeric:tabular-nums;}
+.container{max-width:1320px;margin:0 auto;padding:0 28px;}
+
+/* ---------- Nav ---------- */
+.nav{
+  position:sticky;top:0;z-index:50;
+  background:rgba(10,10,18,0.82);
+  backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--border);
+}
+.nav::after{
+  content:"";display:block;height:3px;
+  background:var(--grad);
+}
+.nav-inner{
+  max-width:1320px;margin:0 auto;padding:0 28px;
+  height:64px;display:flex;align-items:center;gap:32px;
+}
+.logo{display:flex;align-items:center;gap:8px;font-family:"Manrope",sans-serif;font-weight:800;font-size:18px;white-space:nowrap;}
+.logo .mark{
+  width:30px;height:30px;border-radius:9px;
+  background:var(--grad);
+  box-shadow:0 4px 14px -4px rgba(124,58,237,.55);
+  display:flex;align-items:center;justify-content:center;color:#fff;font-size:12.5px;font-weight:800;
+  letter-spacing:-0.02em;
+}
+.logo{letter-spacing:-0.01em;}
+.nav-links{display:flex;gap:4px;flex:1;}
+.nav-links a{
+  padding:8px 12px;border-radius:6px;font-size:14.5px;font-weight:600;color:var(--text-muted);
+  transition:background .12s, color .12s;
+}
+.nav-links a:hover{background:var(--card-2);color:var(--text);}
+.nav-links a.active{color:var(--accent);background:var(--accent-bg);}
+.nav-links a:focus, .nav-links a:focus-visible,
+.btn:focus, .btn:focus-visible,
+.hero-tags a:focus, .hero-tags a:focus-visible{
+  outline:2px solid var(--accent);outline-offset:2px;border-radius:6px;
+}
+.nav-right{display:flex;align-items:center;gap:10px;}
+.search-box{
+  display:flex;align-items:center;gap:8px;
+  background:var(--card);border:1px solid var(--border);border-radius:8px;
+  padding:7px 12px;min-width:220px;
+}
+.search-box input{
+  border:none;outline:none;background:none;font-size:14px;color:var(--text);width:100%;
+  font-family:"Inter",sans-serif;
+}
+.search-box input::placeholder{color:var(--text-muted);}
+.search-box svg{flex-shrink:0;color:var(--text-muted);}
+.btn{
+  padding:9px 17px;border-radius:8px;font-size:14px;font-weight:700;
+  border:1px solid var(--border);background:var(--card);cursor:pointer;color:var(--text);
+  transition:transform .1s ease, box-shadow .15s ease;
+}
+.btn:hover{transform:translateY(-1px);}
+.btn.primary{
+  background:var(--grad);color:#fff;border-color:transparent;
+  box-shadow:0 6px 18px -6px rgba(124,58,237,.55);
+}
+.btn.primary:hover{box-shadow:0 10px 24px -6px rgba(124,58,237,.65);}
+.mobile-toggle{display:none;background:none;border:none;cursor:pointer;padding:6px;}
+
+@media (max-width:960px){
+  .nav-links{display:none;}
+  .search-box{min-width:0;width:150px;}
+  .mobile-toggle{display:block;}
+}
+@media (max-width:600px){
+  /* Below 600px there isn't room for the nav search box next to the logo
+     and Contact button (found via mobile QA — it was pushing the whole
+     page wider than the screen). Every page has its own in-page search
+     or filter, so hide the nav one here rather than trying to shrink it
+     further. */
+  .nav-inner{padding:0 16px;gap:12px;}
+  .nav-right .search-box{display:none;}
+  .nav-right .btn{padding:8px 12px;font-size:13px;}
+}
+
+/* ---------- Chips / pills ---------- */
+.pill{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:3px 9px;border-radius:100px;font-size:12.5px;font-weight:700;
+}
+.pill.pos{color:var(--green);background:var(--green-bg);}
+.pill.neg{color:var(--red);background:var(--red-bg);}
+.pill.neutral{color:var(--text-muted);background:var(--card-2);}
+.chg{font-weight:700;font-variant-numeric:tabular-nums;}
+.chg.pos{color:var(--green);}
+.chg.neg{color:var(--red);}
+
+/* ---------- Cards ---------- */
+.card{
+  background:var(--card);border:1px solid var(--border);border-radius:10px;
+  /* min-width:0 lets a card shrink below its content's natural width when
+     it sits inside a CSS grid track (grid items default to min-width:auto,
+     which otherwise lets a wide table or filter row inside the card force
+     the whole grid — and the page — wider than the screen on mobile). */
+  min-width:0;
+}
+
+/* ---------- Footer ---------- */
+footer{border-top:1px solid var(--border);margin-top:64px;}
+.footer-inner{
+  max-width:1320px;margin:0 auto;padding:36px 28px 44px;
+  display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:24px;
+}
+.footer-links{display:flex;gap:22px;flex-wrap:wrap;}
+.footer-links a{font-size:13.5px;color:var(--text-muted);font-weight:600;}
+.footer-links a:hover{color:var(--text);}
+.footer-note{font-size:12.5px;color:var(--text-muted);max-width:640px;line-height:1.6;}
+
+/* ---------- Utility ---------- */
+.eyebrow{
+  font-family:"IBM Plex Mono",monospace;font-size:11.5px;letter-spacing:.08em;
+  text-transform:uppercase;color:var(--accent);font-weight:600;
+}
+.section{padding:48px 0;}
+.section-head{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px;}
+table{width:100%;border-collapse:collapse;}
+th{
+  text-align:left;font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;
+  color:var(--text-muted);font-weight:600;padding:10px 14px;border-bottom:1px solid var(--border);
+}
+td{padding:12px 14px;font-size:14px;border-bottom:1px solid var(--border);}
+tr:last-child td{border-bottom:none;}
+tbody tr{cursor:pointer;}
+tbody tr:hover{background:var(--card-2);}
+.sym{font-weight:700;}
+.company-name{color:var(--text-muted);font-size:12.5px;}
+
+.sample-banner{
+  background:var(--gold-bg);color:var(--gold);border:1px solid rgba(245,158,11,.35);
+  border-radius:8px;padding:9px 16px;font-size:12.5px;font-weight:600;
+  display:flex;align-items:center;gap:8px;margin-bottom:20px;
+}
+
+/* ---------- Info tooltip (plain-language explainers) ---------- */
+.info-dot{
+  display:inline-flex;align-items:center;justify-content:center;
+  width:15px;height:15px;border-radius:50%;background:var(--card-2);color:var(--text-muted);
+  font-size:10px;font-weight:700;cursor:help;position:relative;flex-shrink:0;
+}
+.info-dot:hover{background:var(--accent);color:#fff;}
+.info-dot .tip{
+  display:none;position:absolute;bottom:130%;left:50%;transform:translateX(-50%);
+  width:230px;background:var(--text);color:#fff;border-radius:8px;padding:10px 12px;
+  font-size:12px;font-weight:500;line-height:1.5;z-index:60;box-shadow:0 8px 24px rgba(0,0,0,.18);
+  text-align:left;
+}
+.info-dot:hover .tip{display:block;}
+
+/* ---------- Score badge (renamed from "ML Score" -> Insight Score) ---------- */
+.score-badge{
+  display:inline-flex;align-items:center;gap:6px;padding:4px 10px 4px 4px;border-radius:100px;
+  background:var(--card-2);font-weight:700;font-size:13px;
+}
+.score-badge .dial{
+  width:24px;height:24px;border-radius:50%;
+  background:conic-gradient(from -90deg, var(--accent) calc(var(--pct,50)*1%), var(--accent-2) calc(var(--pct,50)*1%) calc(var(--pct,50)*1% + 2%), var(--border) 0);
+  display:flex;align-items:center;justify-content:center;
+}
+.score-badge .dial::after{content:"";width:16px;height:16px;border-radius:50%;background:var(--card);}
+
+/* ---------- Chart timeframe tabs ---------- */
+.chart-tabs{display:flex;gap:4px;margin-bottom:14px;}
+.chart-tabs button{
+  padding:6px 12px;border-radius:100px;border:1px solid var(--border);background:var(--card);
+  font-size:12.5px;font-weight:600;color:var(--text-muted);cursor:pointer;font-family:"Inter",sans-serif;
+}
+.chart-tabs button.active{background:var(--grad);border-color:transparent;color:#fff;}
+
+/* ---------- Explain box (plain-language callouts) ---------- */
+.explain-box{
+  background:var(--accent-bg);border:1px solid #BFE6E0;border-radius:10px;
+  padding:14px 16px;font-size:13px;line-height:1.65;color:var(--text);
+}
+.explain-box b{color:var(--accent);}
+
+.filter-chip{
+  display:inline-flex;align-items:center;gap:5px;padding:5px 11px;border-radius:100px;
+  border:1px solid var(--border);background:var(--card);font-size:12.5px;font-weight:600;
+  color:var(--text-muted);cursor:pointer;
+}
+.filter-chip.active{background:var(--grad);border-color:transparent;color:#fff;}
+
+/* ---------- Bold utility accents ---------- */
+.card{transition:box-shadow .15s ease, transform .1s ease;}
+.card:hover{box-shadow:0 10px 28px -14px rgba(124,58,237,.28);}
+::selection{background:var(--accent);color:#fff;}
+input:focus, select:focus{outline:2px solid var(--accent);outline-offset:1px;}

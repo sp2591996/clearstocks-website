@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stock Detail — ClearStocks</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@700;800&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<style>
+  .stock-head{display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:20px;padding:32px 0 24px;}
+  .stock-title{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;}
+  .stock-title .sym{font-family:"Manrope",sans-serif;font-weight:800;font-size:26px;}
+  .stock-title .name{color:var(--text-muted);font-size:15px;}
+  .price-block{text-align:right;}
+  .price-block .price{font-family:"IBM Plex Mono",monospace;font-size:32px;font-weight:600;}
+  .subnav{position:sticky;top:64px;z-index:40;background:rgba(10,10,18,.92);backdrop-filter:blur(6px);border-bottom:1px solid var(--border);overflow-x:auto;}
+  .subnav-inner{max-width:1320px;margin:0 auto;padding:0 28px;display:flex;gap:4px;white-space:nowrap;}
+  .subnav a{padding:12px 14px;font-size:13.5px;font-weight:600;color:var(--text-muted);border-bottom:2px solid transparent;}
+  .subnav a:hover{color:var(--text);}
+  .subnav a.active{color:var(--accent);border-bottom-color:var(--accent);}
+  .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:24px 0;}
+  .stat-tile{padding:16px 18px;}
+  .stat-tile .lbl{font-size:11.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);font-weight:600;margin-bottom:6px;}
+  .stat-tile .val{font-family:"IBM Plex Mono",monospace;font-size:19px;font-weight:600;}
+  .two-col{display:grid;grid-template-columns:1.6fr 1fr;gap:20px;align-items:start;}
+  .two-col > div{min-width:0;}
+  @media (max-width:900px){.two-col{grid-template-columns:1fr;} .stat-grid{grid-template-columns:repeat(2,1fr);}}
+  .chart-placeholder{height:280px;background:var(--card-2);border-radius:8px;display:flex;align-items:center;justify-content:center;color:var(--text-muted);font-size:13.5px;}
+  .verdict-card{padding:20px;}
+  .verdict-card .tag{margin-bottom:10px;}
+  .verdict-card .headline{font-family:"Manrope",sans-serif;font-weight:800;font-size:17px;margin-bottom:6px;}
+  .verdict-card .sub{font-size:13.5px;color:var(--text-muted);line-height:1.6;}
+  .kv-list{padding:4px 20px;}
+  .kv-row{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border);font-size:14px;}
+  .kv-row:last-child{border-bottom:none;}
+  .kv-row .k{color:var(--text-muted);}
+  .kv-row .v{font-family:"IBM Plex Mono",monospace;font-weight:600;}
+  .panel{margin-bottom:20px;padding:22px;}
+  .panel h3{font-size:16px;margin-bottom:14px;}
+  .related-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;}
+  @media (max-width:900px){.related-grid{grid-template-columns:repeat(2,1fr);}}
+  .related-card{padding:14px;cursor:pointer;}
+  .related-card:hover{border-color:var(--accent);}
+  .not-found{padding:80px 0;text-align:center;color:var(--text-muted);}
+
+  /* ---- Summary block: the one consistent block every stock page shows,
+     rich for the 10 researched flagship stocks, honestly pipeline-only
+     for the other 190. research-status tells the two apart at a glance. */
+  .summary-card{padding:22px 24px;margin-bottom:20px;border-width:1px;}
+  .summary-card.full{border-color:rgba(34,197,94,.35);}
+  .summary-card.pipeline{border-color:var(--border);}
+  .summary-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px;}
+  .research-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:11.5px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;}
+  .research-badge.full{background:var(--green-bg);color:var(--green);}
+  .research-badge.pipeline{background:var(--card-2);color:var(--text-muted);border:1px solid var(--border);}
+  .research-badge .dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
+  .summary-text{font-size:14.5px;line-height:1.7;color:var(--text);}
+  .summary-card.pipeline .summary-text{color:var(--text-muted);}
+  .summary-statrow{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:16px;padding-top:16px;border-top:1px solid var(--border);}
+  @media (max-width:900px){.summary-statrow{grid-template-columns:repeat(2,1fr);}}
+  .summary-stat .lbl{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);font-weight:600;margin-bottom:4px;}
+  .summary-stat .val{font-family:"IBM Plex Mono",monospace;font-size:16px;font-weight:600;}
+  .summary-stat .val.dim{color:var(--text-muted);font-family:"Inter",sans-serif;font-size:13px;font-weight:500;}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="logo" href="index.html"><span class="mark">CS</span>ClearStocks</a>
+    <div class="nav-links">
+      <a href="index.html#markets">Markets</a>
+      <a href="screener.html">Screener</a>
+      <a href="how-it-works.html">How It Works</a>
+      <a href="about.html">About</a>
+    </div>
+    <div class="nav-right">
+      <div class="search-box">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.3-4.3"/></svg>
+        <input id="global-search" type="text" placeholder="Search stocks...">
+      </div>
+      <div id="search-results" class="search-results card" style="display:none;"></div>
+      <a class="btn" href="contact.html">Contact</a>
+    </div>
+  </div>
+</nav>
+
+<div class="subnav">
+  <div class="subnav-inner">
+    <a href="#overview" class="active">Overview</a>
+    <a href="#chart">Chart</a>
+    <a href="#financials">Financials</a>
+    <a href="#valuation">Valuation</a>
+    <a href="#dividends">Dividends</a>
+    <a href="#performance">Performance</a>
+    <a href="#company">Company</a>
+  </div>
+</div>
+
+<div class="container" id="page-body">
+  <!-- filled by JS -->
+</div>
+
+<footer>
+  <div class="footer-inner">
+    <div>
+      <div class="logo" style="margin-bottom:10px;"><span class="mark">CS</span>ClearStocks</div>
+      <div class="footer-note">Educational research tool built by an individual investor. Not investment advice, not a recommendation to buy or sell any security. See our <a href="disclaimer.html" style="text-decoration:underline;">full disclaimer</a>.</div>
+    </div>
+    <div class="footer-links">
+      <a href="index.html">Home</a>
+      <a href="screener.html">Screener</a>
+      <a href="how-it-works.html">How It Works</a>
+      <a href="about.html">About</a>
+      <a href="disclaimer.html">Disclaimer</a>
+      <a href="contact.html">Contact</a>
+    </div>
+  </div>
+</footer>
+
+<style>
+  .search-box{position:relative;}
+  #search-results{position:absolute;top:110%;right:0;width:280px;max-height:320px;overflow-y:auto;padding:6px;}
+  .search-row{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 10px;border-radius:6px;cursor:pointer;}
+  .search-row:hover{background:var(--card-2);}
+</style>
+
+<script src="app.js"></script>
+<script>
+function getSymbolFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  return (params.get("symbol") || "").toUpperCase();
+}
+
+function renderNotFound(symbol) {
+  document.getElementById("page-body").innerHTML = `
+    <div class="not-found">
+      <h2 style="margin-bottom:10px;">Stock not found</h2>
+      <p>We couldn't find "${symbol || ""}" in the current list. <a href="screener.html" style="color:var(--accent);text-decoration:underline;">Browse the full screener</a> instead.</p>
+    </div>`;
+}
+
+/* ---------- Summary block: the one consistent block shown for all 200
+   stocks. research_status ("full" for the 10 researched flagship
+   stocks, "pipeline" for the other 190) decides the badge and framing —
+   the pipeline copy never claims a verdict or profile that doesn't
+   exist yet, it just says plainly what's real (the fundamentals below)
+   and what isn't (a scored verdict, a company profile). ---------- */
+function renderSummaryBlock(s) {
+  const isFull = s.research_status === "full";
+  const badge = isFull
+    ? `<span class="research-badge full"><span class="dot"></span>Full Research</span>`
+    : `<span class="research-badge pipeline"><span class="dot"></span>Pipeline Data Only</span>`;
+  const deckLink = isFull
+    ? `<a href="#" id="summary-deck-link" style="font-size:12.5px;color:var(--accent);font-weight:600;">Read the full company deck ↓</a>`
+    : "";
+  const roeVal = s.roe != null ? `${s.roe}%` : "—";
+  return `
+    <div class="card summary-card ${isFull ? "full" : "pipeline"}">
+      <div class="summary-top">
+        ${badge}
+        ${deckLink}
+      </div>
+      <div class="summary-text">${s.summary || "No summary available yet."}</div>
+      <div class="summary-statrow">
+        <div class="summary-stat"><div class="lbl">Insight Score</div><div class="val ${s.ml_percentile == null ? "dim" : ""}">${s.ml_percentile != null ? s.ml_percentile + "/100" : "Not yet scored"}</div></div>
+        <div class="summary-stat"><div class="lbl">P/E</div><div class="val ${s.pe_ratio == null ? "dim" : ""}">${s.pe_ratio ?? "Pending price data"}</div></div>
+        <div class="summary-stat"><div class="lbl">P/B</div><div class="val ${s.pb_ratio == null ? "dim" : ""}">${s.pb_ratio ?? "Pending price data"}</div></div>
+        <div class="summary-stat"><div class="lbl">ROE</div><div class="val ${s.roe == null ? "dim" : ""}">${roeVal}</div></div>
+        <div class="summary-stat"><div class="lbl">Market Cap</div><div class="val ${s.market_cap == null ? "dim" : ""}">${s.market_cap != null ? fmtCap(s.market_cap) : "Pending price data"}</div></div>
+      </div>
+    </div>`;
+}
+
+function renderStockPage(s) {
+  document.title = `${s.symbol} — ${s.name} | ClearStocks`;
+  const chg = s.day_change_pct ?? 0;
+  const related = STOCKS.filter(x => x.sector === s.sector && x.symbol !== s.symbol).slice(0, 4);
+
+  document.getElementById("page-body").innerHTML = `
+    ${sampleBanner()}
+    <div class="stock-head">
+      <div class="stock-title">
+        <span class="sym">${s.symbol}</span>
+        <span class="name">${s.name}</span>
+        <span class="pill neutral">${s.sector || "—"}</span>
+      </div>
+      <div class="price-block">
+        <div class="price">${fmtPrice(s.current_price)}</div>
+        ${s.current_price != null
+          ? `<div class="chg ${chgClass(chg)}">${fmtPct(chg)} <span style="font-weight:500;color:var(--text-muted);">today (1D)</span></div>`
+          : `<div class="chg" style="color:var(--text-muted);font-weight:600;">Price pending pipeline connection</div>`}
+      </div>
+    </div>
+
+    ${renderSummaryBlock(s)}
+
+    <div class="stat-grid">
+      <div class="card stat-tile"><div class="lbl">Insight Score <span class="info-dot">?<span class="tip">Our model's rank for this stock, 0-100, based on historical fundamentals. Higher = signals line up better. Not a price target.</span></span></div><div class="val">${scoreBadge(s.ml_percentile)}</div></div>
+      <div class="card stat-tile"><div class="lbl">Valuation <span class="info-dot">?<span class="tip">Whether the price looks cheap, fair, or expensive compared to other companies in the same sector right now.</span></span></div><div class="val" style="font-size:14px;">${s.valuation_verdict || "—"}</div></div>
+      <div class="card stat-tile"><div class="lbl">P/E Ratio <span class="info-dot">?<span class="tip">Price-to-Earnings: how many years of current profit it would take to earn back the share price.</span></span></div><div class="val">${s.pe_ratio ?? "—"}</div></div>
+      <div class="card stat-tile"><div class="lbl">Market Cap</div><div class="val" style="font-size:15px;">${fmtCap(s.market_cap)}</div></div>
+    </div>
+
+    <div style="margin-bottom:20px;">
+      <a class="btn primary" id="download-deck-btn" href="#" style="display:inline-flex;align-items:center;gap:8px;">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
+        ${s.research_status === "full" ? "Download company deck (PDF)" : "Download pipeline snapshot (PDF)"}
+      </a>
+      <span style="font-size:12px;color:var(--text-muted);margin-left:10px;">${s.research_status === "full"
+        ? "A full 40+ page research deck with our valuation analysis, ready to save or print."
+        : "Fundamentals-only snapshot — no analyst verdict or company profile yet, see the Summary above."}</span>
+    </div>
+
+    <div class="two-col">
+      <div>
+        <div id="chart" class="card panel">
+          <h3>Price Chart</h3>
+          <div class="chart-tabs" id="chart-tabs">
+            <button data-range="1D" class="active">1D</button>
+            <button data-range="1W">1W</button>
+            <button data-range="1M">1M</button>
+            <button data-range="6M">6M</button>
+            <button data-range="1Y">1Y</button>
+            <button data-range="5Y">5Y</button>
+          </div>
+          <div id="chart-svg-wrap"></div>
+          <div id="chart-note" style="font-size:11.5px;color:var(--text-muted);margin-top:8px;">Illustrative chart while price history is being connected — once live, this will show the real ${s.symbol} price for the selected period.</div>
+        </div>
+
+        <div id="financials" class="card panel">
+          <h3>Key Ratios</h3>
+          <div class="kv-list">
+            <div class="kv-row"><span class="k">P/E Ratio</span><span class="v">${s.pe_ratio ?? "—"}</span></div>
+            <div class="kv-row"><span class="k">P/B Ratio</span><span class="v">${s.pb_ratio ?? "—"}</span></div>
+            <div class="kv-row"><span class="k">Return on Equity (ROE)</span><span class="v">${s.roe != null ? s.roe + "%" : "—"}</span></div>
+            <div class="kv-row"><span class="k">Market Cap</span><span class="v">${fmtCap(s.market_cap)}</span></div>
+          </div>
+        </div>
+
+        <div id="full-financials" class="card panel">
+          <h3>Financials — last 4 years</h3>
+          <div id="fin-table-wrap" style="color:var(--text-muted);font-size:13px;">Loading financial history…</div>
+          <div id="growth-table-wrap" style="color:var(--text-muted);font-size:13px;margin-top:14px;"></div>
+        </div>
+
+        <div id="common-size" class="card panel">
+          <h3>Common-Size Statement (% of Revenue)</h3>
+          <div id="common-size-wrap" style="color:var(--text-muted);font-size:13px;">Loading…</div>
+        </div>
+
+        <div id="leverage" class="card panel">
+          <h3>Leverage &amp; Solvency Ratios</h3>
+          <div id="leverage-wrap" style="color:var(--text-muted);font-size:13px;">Loading…</div>
+        </div>
+
+        <div id="sector-compare" class="card panel">
+          <h3>Sector Comparison — ${s.sector || ""}</h3>
+          <div id="sector-table-wrap" style="color:var(--text-muted);font-size:13px;">Loading…</div>
+        </div>
+
+        <div id="competitor-benchmark" class="card panel">
+          <h3>Competitor Benchmark</h3>
+          <div id="competitor-table-wrap" style="color:var(--text-muted);font-size:13px;">Loading…</div>
+        </div>
+
+        <div id="forecast" class="card panel">
+          <h3>3-Year Trend-Based Forecast</h3>
+          <div id="forecast-wrap" style="color:var(--text-muted);font-size:13px;">Loading…</div>
+        </div>
+
+        <div id="risk-flags" class="card panel">
+          <h3>Risk Flags</h3>
+          <div id="risk-flags-wrap" style="color:var(--text-muted);font-size:13px;">Loading…</div>
+        </div>
+
+        <div id="performance" class="card panel">
+          <h3>52-Week Range</h3>
+          <div class="kv-list">
+            <div class="kv-row"><span class="k">52-Week High</span><span class="v">${fmtPrice(s.week52_high)}</span></div>
+            <div class="kv-row"><span class="k">52-Week Low</span><span class="v">${fmtPrice(s.week52_low)}</span></div>
+            <div class="kv-row"><span class="k">Current Price</span><span class="v">${fmtPrice(s.current_price)}</span></div>
+          </div>
+        </div>
+
+        <div id="dividends" class="card panel">
+          <h3>Dividends</h3>
+          <div style="color:var(--text-muted);font-size:13.5px;">Dividend history isn't part of this model yet — planned for a future update.</div>
+        </div>
+
+        <div id="company" class="card panel">
+          <h3>Company Overview</h3>
+          <div id="company-overview-wrap" style="color:var(--text-muted);font-size:13.5px;line-height:1.7;">
+            ${s.name} operates in the ${s.sector || "—"} sector, part of the Nifty 200 index.
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div id="valuation" class="card verdict-card">
+          <div class="tag"><span class="pill ${verdictClass(s.valuation_verdict)}">${s.valuation_verdict || "—"}</span></div>
+          <div class="headline">${s.interpretation || "No interpretation available"}</div>
+          <div class="explain-box" style="margin-top:10px;">${explainVerdict(s)}</div>
+          <div class="sub" style="margin-top:10px;">This is not a buy/sell signal — see <a href="disclaimer.html" style="color:var(--accent);">important disclaimers</a>.</div>
+        </div>
+
+        <div class="card panel" style="margin-top:20px;">
+          <h3>Related Stocks — ${s.sector || ""}</h3>
+          <div class="related-grid">
+            ${related.map(r => `
+              <div class="card related-card" data-symbol="${r.symbol}">
+                <div class="sym" style="font-size:13.5px;">${r.symbol}</div>
+                <div class="company-name">${r.name}</div>
+                <div class="chg ${chgClass(r.day_change_pct)}" style="font-size:12.5px;margin-top:4px;">${fmtPct(r.day_change_pct)}</div>
+              </div>`).join("") || `<div style="color:var(--text-muted);font-size:13px;">No other stocks in this sector yet.</div>`}
+          </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+/* ---------- Price chart (seeded illustrative series until real
+   price-history is wired up; deterministic per symbol so it doesn't
+   jump around on every reload) ---------- */
+const RANGE_POINTS = { "1D": 24, "1W": 7, "1M": 30, "6M": 26, "1Y": 52, "5Y": 60 };
+
+function seededRandom(seed) {
+  let s = seed % 2147483647; if (s <= 0) s += 2147483646;
+  return () => (s = (s * 16807) % 2147483647) / 2147483647;
+}
+
+function buildSeries(symbol, price, range) {
+  const n = RANGE_POINTS[range];
+  let seed = 0; for (let i = 0; i < symbol.length; i++) seed += symbol.charCodeAt(i) * (i + 1);
+  const rand = seededRandom(seed + n);
+  const vol = { "1D": 0.004, "1W": 0.01, "1M": 0.02, "6M": 0.035, "1Y": 0.05, "5Y": 0.08 }[range];
+  const pts = [price];
+  for (let i = 1; i < n; i++) pts.push(pts[i-1] * (1 + (rand() - 0.5) * vol));
+  pts.reverse(); pts[pts.length - 1] = price;
+  return pts;
+}
+
+function realSeriesForRange(history, range) {
+  if (!history || !history.length) return null;
+  const closes = history.map(p => p.Close).filter(v => v != null);
+  if (closes.length < 2) return null;
+  const take = { "1D": 1, "1W": 5, "1M": 22, "6M": 130, "1Y": 260, "5Y": closes.length }[range] || closes.length;
+  return closes.slice(Math.max(0, closes.length - take));
+}
+
+function renderChart(symbol, price, range, history) {
+  const real = realSeriesForRange(history, range);
+  const usingReal = !!real;
+  const pts = real && real.length > 1 ? real : buildSeries(symbol, price, range);
+  const note = document.getElementById("chart-note");
+  if (note) {
+    note.textContent = usingReal
+      ? `Showing your pipeline's actual recorded ${symbol} closing prices for this period.`
+      : `Illustrative chart while price history is being connected — once live, this will show the real ${symbol} price for the selected period.`;
+  }
+  const w = 600, h = 240, pad = 10;
+  const min = Math.min(...pts), max = Math.max(...pts);
+  const x = i => pad + (i / (pts.length - 1)) * (w - pad*2);
+  const y = v => pad + (1 - (v - min) / ((max - min) || 1)) * (h - pad*2);
+  const path = pts.map((v,i) => `${i===0?"M":"L"}${x(i).toFixed(1)},${y(v).toFixed(1)}`).join(" ");
+  const up = pts[pts.length-1] >= pts[0];
+  const color = up ? "var(--green)" : "var(--red)";
+  const areaPath = `${path} L${x(pts.length-1).toFixed(1)},${h-pad} L${x(0).toFixed(1)},${h-pad} Z`;
+  document.getElementById("chart-svg-wrap").innerHTML = `
+    <svg viewBox="0 0 ${w} ${h}" style="width:100%;height:240px;">
+      <path d="${areaPath}" fill="${color}" opacity="0.08"></path>
+      <path d="${path}" fill="none" stroke="${color}" stroke-width="2"></path>
+    </svg>`;
+}
+
+/* ---------- Downloadable company deck (proof-of-concept) ---------- */
+function buildDeckSummaryHTML(s) {
+  return `<!doctype html><html><head><meta charset="utf-8"><title>${s.symbol} — Company Deck</title>
+  <style>body{font-family:sans-serif;max-width:640px;margin:40px auto;color:#0B1E1C;}
+  h1{margin-bottom:0;} .sub{color:#5B6D6A;margin-top:4px;} table{width:100%;border-collapse:collapse;margin-top:24px;}
+  td{padding:8px 0;border-bottom:1px solid #DCE7E4;} td:first-child{color:#5B6D6A;}
+  .foot{margin-top:40px;font-size:12px;color:#5B6D6A;border-top:1px solid #DCE7E4;padding-top:12px;}</style></head>
+  <body><h1>${s.symbol}</h1><div class="sub">${s.name} — ${s.sector}</div>
+  <table>
+    <tr><td>Current Price</td><td>${fmtPrice(s.current_price)}</td></tr>
+    <tr><td>Insight Score</td><td>${s.ml_percentile ?? "—"} / 100</td></tr>
+    <tr><td>Valuation</td><td>${s.valuation_verdict || "—"}</td></tr>
+    <tr><td>P/E Ratio</td><td>${s.pe_ratio ?? "—"}</td></tr>
+    <tr><td>P/B Ratio</td><td>${s.pb_ratio ?? "—"}</td></tr>
+    <tr><td>ROE</td><td>${s.roe != null ? s.roe + "%" : "—"}</td></tr>
+    <tr><td>Market Cap</td><td>${fmtCap(s.market_cap)}</td></tr>
+    <tr><td>52-Week Range</td><td>${fmtPrice(s.week52_low)} – ${fmtPrice(s.week52_high)}</td></tr>
+  </table>
+  <p style="margin-top:24px;">${explainVerdict(s).replace(/<\/?b>/g,"")}</p>
+  <div class="foot">ClearStocks — educational research only, not investment advice. This is a one-page preview; the full 20-30 page deck (cover page, company profile, financial trends, valuation detail, risks, and disclaimers) is generated by a script once your pipeline's fundamentals export is connected.</div>
+  </body></html>`;
+}
+
+/* ---------- Real multi-year financials + sector comparison + company facts ---------- */
+function fmtCr(rupees) {
+  if (rupees == null || isNaN(rupees)) return "—";
+  return "₹" + (rupees / 1e7).toLocaleString("en-IN", { maximumFractionDigits: 0 }) + " Cr";
+}
+function fmtYear(dateStr) {
+  // "2026-03-31" -> "FY2026"
+  const y = (dateStr || "").slice(0, 4);
+  return y ? "FY" + y : dateStr;
+}
+
+function renderFinancialsTable(rows) {
+  const wrap = document.getElementById("fin-table-wrap");
+  if (!wrap) return;
+  if (!rows || !rows.length) {
+    wrap.innerHTML = `<div>Detailed financial history isn't available for this stock yet.</div>`;
+    return;
+  }
+  const metrics = [
+    ["Total Revenue", "Total Revenue"],
+    ["Net Income", "Net Income"],
+    ["EBITDA", "EBITDA"],
+    ["Total Debt", "Total Debt"],
+    ["Stockholders Equity", "Stockholders Equity"],
+    ["Cash And Cash Equivalents", "Cash & Equivalents"],
+    ["Total Assets", "Total Assets"],
+    ["Free Cash Flow", "Free Cash Flow"],
+    ["Operating Cash Flow", "Operating Cash Flow"],
+    ["Capital Expenditure", "Capital Expenditure"],
+  ];
+  const years = rows.map(r => fmtYear(r["Year"]));
+  let html = `<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:12.5px;">
+    <thead><tr>
+      <th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text-muted);font-weight:600;">Metric</th>
+      ${years.map(y => `<th style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text-muted);font-weight:600;">${y}</th>`).join("")}
+    </tr></thead><tbody>`;
+  metrics.forEach(([key, label]) => {
+    html += `<tr><td style="padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text);">${label}</td>`;
+    rows.forEach(r => {
+      const v = parseFloat(r[key]);
+      html += `<td style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text);">${fmtCr(v)}</td>`;
+    });
+    html += `</tr>`;
+  });
+  html += `<tr><td style="padding:6px 8px;color:var(--text);">ROE</td>`;
+  rows.forEach(r => {
+    let roe = parseFloat(r["ROE"]);
+    if (!isNaN(roe)) roe = Math.abs(roe) <= 1.5 ? roe * 100 : roe;
+    html += `<td style="text-align:right;padding:6px 8px;color:var(--text);">${isNaN(roe) ? "—" : roe.toFixed(1) + "%"}</td>`;
+  });
+  html += `</tr></tbody></table></div>
+  <div style="font-size:11.5px;color:var(--text-muted);margin-top:8px;">Sourced from company financial statements. Figures in ₹ Crores.</div>`;
+  wrap.innerHTML = html;
+}
+
+function fmtPct1(v) { return v == null || isNaN(v) ? "—" : (v >= 0 ? "+" : "") + v.toFixed(1) + "%"; }
+
+function renderGrowthTable(rows) {
+  const wrap = document.getElementById("growth-table-wrap");
+  if (!wrap) return;
+  if (!rows || rows.length < 2) { wrap.innerHTML = ""; return; }
+  let html = `<div style="font-weight:600;color:var(--text);margin-bottom:6px;font-size:13px;">Year-over-year growth</div>
+    <div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:12.5px;"><thead><tr>
+    <th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text-muted);">Metric</th>
+    ${rows.slice(1).map(r => `<th style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text-muted);">${fmtYear(r["Year"])}</th>`).join("")}
+    </tr></thead><tbody>`;
+  [["Total Revenue", "Revenue Growth"], ["Net Income", "Net Income Growth"]].forEach(([key, label]) => {
+    html += `<tr><td style="padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text);">${label}</td>`;
+    for (let i = 1; i < rows.length; i++) {
+      const prev = parseFloat(rows[i-1][key]), cur = parseFloat(rows[i][key]);
+      const pct = prev ? (cur - prev) / Math.abs(prev) * 100 : null;
+      html += `<td style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text);">${fmtPct1(pct)}</td>`;
+    }
+    html += `</tr>`;
+  });
+  html += `</tbody></table></div>`;
+  wrap.innerHTML = html;
+}
+
+function renderCommonSize(rows) {
+  const wrap = document.getElementById("common-size-wrap");
+  if (!wrap) return;
+  if (!rows || !rows.length) { wrap.innerHTML = `<div>Not available for this stock yet.</div>`; return; }
+  const metrics = [["Net Income","Net Income"],["EBITDA","EBITDA"],["Total Debt","Total Debt"],
+    ["Stockholders Equity","Stockholders Equity"],["Total Assets","Total Assets"],["Operating Cash Flow","Operating Cash Flow"]];
+  let html = `<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:12.5px;"><thead><tr>
+    <th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text-muted);">% of Revenue</th>
+    ${rows.map(r => `<th style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text-muted);">${fmtYear(r["Year"])}</th>`).join("")}
+    </tr></thead><tbody>`;
+  metrics.forEach(([key, label]) => {
+    html += `<tr><td style="padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text);">${label}</td>`;
+    rows.forEach(r => {
+      const rev = parseFloat(r["Total Revenue"]), v = parseFloat(r[key]);
+      // Bank stocks (and some others) have no EBITDA field at all — v is
+      // NaN there, and rev alone being truthy isn't enough to guard
+      // against that, so it was rendering literal "NaN%" (found via QA;
+      // the same class of bug already fixed once in the PDF generator's
+      // ebitda_debt_observations()).
+      const ok = rev && !isNaN(v);
+      html += `<td style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text);">${ok ? (v/rev*100).toFixed(1)+"%" : "—"}</td>`;
+    });
+    html += `</tr>`;
+  });
+  html += `</tbody></table></div>
+  <div style="font-size:11.5px;color:var(--text-muted);margin-top:8px;">Shows how each line item moves relative to revenue over time.</div>`;
+  wrap.innerHTML = html;
+}
+
+function renderLeverage(rows) {
+  const wrap = document.getElementById("leverage-wrap");
+  if (!wrap) return;
+  if (!rows || !rows.length) { wrap.innerHTML = `<div>Not enough financial-history data available yet.</div>`; return; }
+  const latest = rows[rows.length - 1];
+  const debt = parseFloat(latest["Total Debt"]), equity = parseFloat(latest["Stockholders Equity"]), ebitda = parseFloat(latest["EBITDA"]);
+  // A company that reports no Total Debt (asset managers, some insurers)
+  // has debt = NaN here, not 0 — and `equity ? debt/equity : null` only
+  // guards against a falsy denominator, not a NaN numerator, so the
+  // division still produces NaN and `de != null` is true for NaN (it's
+  // not strictly equal to null), rendering literal "NaNx" (found via QA
+  // on HDFCAMC, ICICIGI, ICICIAMC, SBILIFE, NESTLEIND).
+  const de = (equity && !isNaN(debt)) ? debt / equity : null;
+  const deb = (ebitda && !isNaN(debt)) ? debt / ebitda : null;
+  wrap.innerHTML = `<div class="kv-list">
+    <div class="kv-row"><span class="k">Debt-to-Equity</span><span class="v">${de != null && !isNaN(de) ? de.toFixed(2)+"x" : "—"}</span></div>
+    <div class="kv-row"><span class="k">Debt-to-EBITDA</span><span class="v">${deb != null && !isNaN(deb) ? deb.toFixed(2)+"x" : "—"}</span></div>
+  </div>
+  <div style="font-size:11.5px;color:var(--text-muted);margin-top:10px;">Debt-to-Equity above ~1x, or Debt-to-EBITDA above ~3x, generally signals a more leveraged balance sheet.</div>
+  <div style="font-size:11px;color:var(--text-muted);margin-top:8px;font-style:italic;">Liquidity ratios (Current/Quick Ratio) and Efficiency ratios (Turnover, Receivables Days) aren't shown — our data doesn't include Current Assets/Liabilities, Inventory or Receivables figures.</div>`;
+}
+
+function renderCompetitorBenchmark(s) {
+  const wrap = document.getElementById("competitor-table-wrap");
+  if (!wrap) return;
+  const peers = STOCKS.filter(x => x.sector === s.sector && x.symbol !== s.symbol)
+    .sort((a, b) => (b.market_cap || 0) - (a.market_cap || 0)).slice(0, 6);
+  if (!peers.length) { wrap.innerHTML = `<div>No sector peers to compare against yet.</div>`; return; }
+  let html = `<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:12.5px;"><thead><tr>
+    <th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text-muted);">Company</th>
+    <th style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text-muted);">P/E</th>
+    <th style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text-muted);">P/B</th>
+    <th style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text-muted);">ROE</th>
+    <th style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text-muted);">Mkt Cap</th>
+    </tr></thead><tbody>
+    <tr style="background:var(--card-2);"><td style="padding:6px 8px;color:var(--text);font-weight:600;">${s.symbol} (this stock)</td>
+      <td style="text-align:right;padding:6px 8px;color:var(--text);">${s.pe_ratio ?? "—"}</td>
+      <td style="text-align:right;padding:6px 8px;color:var(--text);">${s.pb_ratio ?? "—"}</td>
+      <td style="text-align:right;padding:6px 8px;color:var(--text);">${s.roe != null ? s.roe+"%" : "—"}</td>
+      <td style="text-align:right;padding:6px 8px;color:var(--text);">${fmtCap(s.market_cap)}</td></tr>`;
+  peers.forEach(p => {
+    html += `<tr data-symbol="${p.symbol}" style="cursor:pointer;">
+      <td style="padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text);">${p.symbol}</td>
+      <td style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text);">${p.pe_ratio ?? "—"}</td>
+      <td style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text);">${p.pb_ratio ?? "—"}</td>
+      <td style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text);">${p.roe != null ? p.roe+"%" : "—"}</td>
+      <td style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text);">${fmtCap(p.market_cap)}</td></tr>`;
+  });
+  html += `</tbody></table></div>
+  <div style="font-size:11.5px;color:var(--text-muted);margin-top:8px;">Largest sector peers by market cap — real figures from the same dataset, not estimates.</div>`;
+  wrap.innerHTML = html;
+}
+
+function renderForecast(symbol, rows) {
+  const wrap = document.getElementById("forecast-wrap");
+  if (!wrap) return;
+  if (!rows || rows.length < 2) { wrap.innerHTML = `<div>Not enough historical data to extrapolate a forecast for this stock.</div>`; return; }
+  const n = rows.length - 1;
+  const cagr = (first, last, years) => {
+    first = parseFloat(first); last = parseFloat(last);
+    if (!(first > 0) || !(last > 0) || years <= 0) return null;
+    return Math.pow(last / first, 1 / years) - 1;
+  };
+  const revCagr = cagr(rows[0]["Total Revenue"], rows[rows.length-1]["Total Revenue"], n);
+  const niCagr = cagr(rows[0]["Net Income"], rows[rows.length-1]["Net Income"], n);
+  let html = `<div style="font-size:11.5px;color:var(--text-muted);margin-bottom:10px;"><b>Not a professional forecast or DCF model.</b> This mechanically extends this company's own historical growth rate over its last ${n} years of data — real results depend on much more than a straight-line extrapolation.</div>`;
+  if (revCagr != null && niCagr != null) {
+    const lastYear = parseInt(fmtYear(rows[rows.length-1]["Year"]).replace("FY",""));
+    let projRev = parseFloat(rows[rows.length-1]["Total Revenue"]) / 1e7;
+    let projNi = parseFloat(rows[rows.length-1]["Net Income"]) / 1e7;
+    let html2 = `<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:12.5px;"><thead><tr>
+      <th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text-muted);">Metric (₹Cr)</th>
+      <th style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text-muted);">FY${lastYear} (actual)</th>`;
+    for (let i = 1; i <= 3; i++) html2 += `<th style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text-muted);">FY${lastYear+i}E</th>`;
+    html2 += `</tr></thead><tbody><tr><td style="padding:6px 8px;color:var(--text);">Revenue</td><td style="text-align:right;padding:6px 8px;color:var(--text);">${projRev.toLocaleString("en-IN",{maximumFractionDigits:0})}</td>`;
+    let r = projRev;
+    for (let i = 1; i <= 3; i++) { r *= (1+revCagr); html2 += `<td style="text-align:right;padding:6px 8px;color:var(--text);">${r.toLocaleString("en-IN",{maximumFractionDigits:0})}</td>`; }
+    html2 += `</tr><tr><td style="padding:6px 8px;color:var(--text);">Net Income</td><td style="text-align:right;padding:6px 8px;color:var(--text);">${projNi.toLocaleString("en-IN",{maximumFractionDigits:0})}</td>`;
+    let ni = projNi;
+    for (let i = 1; i <= 3; i++) { ni *= (1+niCagr); html2 += `<td style="text-align:right;padding:6px 8px;color:var(--text);">${ni.toLocaleString("en-IN",{maximumFractionDigits:0})}</td>`; }
+    html2 += `</tr></tbody></table></div>
+    <div style="font-size:11.5px;color:var(--text-muted);margin-top:8px;">Based on a historical Revenue CAGR of ${(revCagr*100).toFixed(1)}% and Net Income CAGR of ${(niCagr*100).toFixed(1)}% over the last ${n} years.</div>`;
+    html += html2;
+  } else {
+    html += `<div>Not enough clean historical data to extrapolate a forecast for this stock.</div>`;
+  }
+  wrap.innerHTML = html;
+}
+
+function renderRiskFlags(rows) {
+  const wrap = document.getElementById("risk-flags-wrap");
+  if (!wrap) return;
+  const flags = [];
+  if (rows && rows.length >= 3) {
+    const debts = rows.map(r => parseFloat(r["Total Debt"]));
+    if (debts.every((v,i) => i===0 || v > debts[i-1])) flags.push(`Total Debt has risen every year for the last ${debts.length} years of available data.`);
+    const margins = rows.map(r => { const rev = parseFloat(r["Total Revenue"]), ni = parseFloat(r["Net Income"]); return rev ? ni/rev*100 : null; }).filter(v => v != null);
+    if (margins.length >= 3 && margins.every((v,i) => i===0 || v < margins[i-1])) flags.push(`Net margin has declined every year for the last ${margins.length} years (${margins[0].toFixed(1)}% → ${margins[margins.length-1].toFixed(1)}%).`);
+    const lastFcf = parseFloat(rows[rows.length-1]["Free Cash Flow"]);
+    if (lastFcf < 0) flags.push("Most recent year's Free Cash Flow is negative.");
+    const latest = rows[rows.length-1];
+    const debt = parseFloat(latest["Total Debt"]), equity = parseFloat(latest["Stockholders Equity"]);
+    if (equity && debt/equity > 1.5) flags.push(`Debt-to-Equity is elevated at ${(debt/equity).toFixed(2)}x.`);
+  }
+  if (!flags.length) {
+    wrap.innerHTML = `<div>No mechanical red flags detected in the metrics we track (debt trend, margin trend, free cash flow, leverage). This is not a full risk assessment — always verify independently.</div>`;
+  } else {
+    wrap.innerHTML = flags.map(f => `<div style="margin-bottom:6px;">⚠ ${f}</div>`).join("") +
+      `<div style="font-size:11.5px;color:var(--text-muted);margin-top:8px;">These are mechanical checks on the numbers above, not a professional risk assessment.</div>`;
+  }
+}
+
+function renderSectorComparison(s) {
+  const wrap = document.getElementById("sector-table-wrap");
+  if (!wrap) return;
+  const peers = STOCKS.filter(x => x.sector === s.sector && x.symbol !== s.symbol);
+  if (!peers.length) {
+    wrap.innerHTML = `<div>No other stocks in this sector to compare against yet.</div>`;
+    return;
+  }
+  const avg = (arr) => {
+    const vals = arr.filter(v => v != null && !isNaN(v));
+    return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+  };
+  const sectorPE = avg(peers.map(p => p.pe_ratio));
+  const sectorPB = avg(peers.map(p => p.pb_ratio));
+  const sectorROE = avg(peers.map(p => p.roe));
+  const row = (label, mine, sector, suffix = "") => `
+    <tr>
+      <td style="padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text);">${label}</td>
+      <td style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text);">${mine != null ? mine + suffix : "—"}</td>
+      <td style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text-muted);">${sector != null ? sector.toFixed(1) + suffix : "—"}</td>
+    </tr>`;
+  wrap.innerHTML = `<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:12.5px;">
+    <thead><tr>
+      <th style="text-align:left;padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text-muted);font-weight:600;">Metric</th>
+      <th style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text-muted);font-weight:600;">${s.symbol}</th>
+      <th style="text-align:right;padding:6px 8px;border-bottom:1px solid var(--border);color:var(--text-muted);font-weight:600;">Sector avg (${peers.length} peers)</th>
+    </tr></thead><tbody>
+      ${row("P/E Ratio", s.pe_ratio, sectorPE)}
+      ${row("P/B Ratio", s.pb_ratio, sectorPB)}
+      ${row("ROE", s.roe, sectorROE, "%")}
+    </tbody></table></div>`;
+}
+
+function renderCompanyOverview(s, facts) {
+  const wrap = document.getElementById("company-overview-wrap");
+  if (!wrap) return;
+  const f = facts && facts[s.symbol];
+  let html = `<div class="kv-list">`;
+  html += `<div class="kv-row"><span class="k">Company Name</span><span class="v">${(f && f.company_name) || s.name}</span></div>`;
+  html += `<div class="kv-row"><span class="k">Sector</span><span class="v">${s.sector || "—"}</span></div>`;
+  html += `<div class="kv-row"><span class="k">Industry</span><span class="v">${(f && f.industry) || "—"}</span></div>`;
+  html += `<div class="kv-row"><span class="k">ISIN</span><span class="v">${(f && f.isin) || "—"}</span></div>`;
+  html += `<div class="kv-row"><span class="k">Index</span><span class="v">Nifty 200</span></div>`;
+  html += `</div>`;
+  html += `<div style="font-size:11.5px;color:var(--text-muted);margin-top:10px;">
+    We show every factual field our data currently covers. We don't have a written company description, shareholding pattern, or business-segment breakdown for this stock yet — rather than guess, we're leaving that out until it's genuinely available.
+  </div>`;
+  wrap.innerHTML = html;
+}
+
+(async function init() {
+  await loadStockData();
+  initNav();
+  const symbol = getSymbolFromUrl();
+  const s = STOCKS.find(x => x.symbol === symbol);
+  if (!s) { renderNotFound(symbol); return; }
+  renderStockPage(s);
+  renderChart(s.symbol, s.current_price || 100, "1D", s.price_history);
+  renderSectorComparison(s);
+  renderCompetitorBenchmark(s);
+
+  fetch("fundamentals_all.json", { cache: "no-store" })
+    .then(r => r.ok ? r.json() : null)
+    .then(all => {
+      const rows = all && all[s.symbol];
+      renderFinancialsTable(rows);
+      renderGrowthTable(rows);
+      renderCommonSize(rows);
+      renderLeverage(rows);
+      renderForecast(s.symbol, rows);
+      renderRiskFlags(rows);
+    })
+    .catch(() => {
+      renderFinancialsTable(null); renderGrowthTable(null); renderCommonSize(null);
+      renderLeverage(null); renderForecast(s.symbol, null); renderRiskFlags(null);
+    });
+
+  fetch("company_facts.json", { cache: "no-store" })
+    .then(r => r.ok ? r.json() : null)
+    .then(facts => renderCompanyOverview(s, facts))
+    .catch(() => renderCompanyOverview(s, null));
+
+  document.getElementById("chart-tabs").addEventListener("click", (e) => {
+    const btn = e.target.closest("button[data-range]");
+    if (!btn) return;
+    document.querySelectorAll("#chart-tabs button").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    renderChart(s.symbol, s.current_price || 100, btn.dataset.range, s.price_history);
+  });
+
+  // Real per-stock PDF decks live in decks/<SYMBOL>_Company_Deck.pdf,
+  // built by generate_company_deck.py from the same dashboard_data.json
+  // this page reads. decks/manifest.json lists which symbols currently
+  // have one. If a real deck exists, the button links straight to the
+  // PDF; otherwise it falls back to a quick in-browser preview so the
+  // feature never looks broken while decks are being (re)generated.
+  // No deck button at all for the 190 not-yet-researched stocks (see
+  // has_deck in the Summary block above) — nothing to wire up there.
+  const deckBtn = document.getElementById("download-deck-btn");
+  if (deckBtn) {
+    fetch("decks/decks/manifest.json", { cache: "no-store" })
+      .then(r => r.ok ? r.json() : null)
+      .then(manifest => {
+        if (manifest && manifest.symbols && manifest.symbols.includes(s.symbol)) {
+          deckBtn.href = `decks/decks/${s.symbol}_Company_Deck.pdf`;
+          deckBtn.target = "_blank";
+          deckBtn.rel = "noopener";
+        } else {
+          deckBtn.addEventListener("click", (e) => {
+            e.preventDefault();
+            const html = buildDeckSummaryHTML(s);
+            const w = window.open("", "_blank");
+            if (w) { w.document.write(html); w.document.close(); }
+          });
+        }
+      })
+      .catch(() => {
+        deckBtn.addEventListener("click", (e) => {
+          e.preventDefault();
+          const html = buildDeckSummaryHTML(s);
+          const w = window.open("", "_blank");
+          if (w) { w.document.write(html); w.document.close(); }
+        });
+      });
+  }
+
+  const summaryDeckLink = document.getElementById("summary-deck-link");
+  if (summaryDeckLink) {
+    summaryDeckLink.addEventListener("click", (e) => {
+      e.preventDefault();
+      document.getElementById("download-deck-btn")?.click();
+    });
+  }
+
+  document.body.addEventListener("click", (e) => {
+    const row = e.target.closest("[data-symbol]");
+    if (row && row.dataset.symbol !== symbol) window.location.href = `stock.html?symbol=${row.dataset.symbol}`;
+  });
+})();
+</script>
+</body>
+</html>
