@@ -264,6 +264,16 @@ function explainVerdict(s) {
   const strongScore = s.ml_percentile != null && s.ml_percentile >= 70;
   const weakScore = s.ml_percentile != null && s.ml_percentile < 40;
 
+  // A stock whose fundamentals have been researched but whose Insight
+  // Score / valuation haven't been run yet (ml_percentile is still null)
+  // used to fall through to the generic "don't point strongly the same
+  // way" sentence below -- which reads as "we checked both and they
+  // disagree," when the honest state is "we haven't checked either yet."
+  // Found while reviewing the first newly-researched batch (SBIN etc.).
+  if (s.ml_percentile == null) {
+    return `${s.symbol} hasn't been scored yet — the Insight Score and a valuation comparison against its sector both populate automatically once live price data syncs for this stock. See the Summary above for what's been reviewed so far.`;
+  }
+
   if (strongScore && cheap) {
     return `${s.symbol} scores <b>${s.ml_percentile}/100</b> on our Insight Score (${tier.label.toLowerCase()}, meaning the model's history-based signals line up well) <b>and</b> its current price looks cheap versus other companies in the same sector. Both checks pointing the same way is why it's flagged as a strongest candidate — it does not mean the price will rise.`;
   }

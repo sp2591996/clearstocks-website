@@ -254,11 +254,11 @@ function renderStockPage(s) {
     <div style="margin-bottom:20px;">
       <a class="btn primary" id="download-deck-btn" href="#" style="display:inline-flex;align-items:center;gap:8px;">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M5 21h14"/></svg>
-        ${s.research_status === "full" ? "Download company deck (PDF)" : "Download pipeline snapshot (PDF)"}
+        ${s.has_deck ? "Download company deck (PDF)" : "Download pipeline snapshot (PDF)"}
       </a>
-      <span style="font-size:12px;color:var(--text-muted);margin-left:10px;">${s.research_status === "full"
+      <span style="font-size:12px;color:var(--text-muted);margin-left:10px;">${s.has_deck
         ? "A full 40+ page research deck with our valuation analysis, ready to save or print."
-        : "Fundamentals-only snapshot — no analyst verdict or company profile yet, see the Summary above."}</span>
+        : "Fundamentals-only snapshot — the full research deck for this stock hasn't been built yet, see the Summary above."}</span>
     </div>
 
     <div class="two-col">
