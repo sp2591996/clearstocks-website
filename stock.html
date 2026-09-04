@@ -16,6 +16,15 @@
   .price-block .price{font-family:"IBM Plex Mono",monospace;font-size:32px;font-weight:600;}
   .subnav{position:sticky;top:64px;z-index:40;background:rgba(10,10,18,.92);backdrop-filter:blur(6px);border-bottom:1px solid var(--border);overflow-x:auto;}
   .subnav-inner{max-width:1320px;margin:0 auto;padding:0 28px;display:flex;gap:4px;white-space:nowrap;}
+  /* The top nav (64px) + this subnav (~46px) are both sticky and stack on
+     top of the page, so a plain #anchor jump landed each section's title
+     right underneath them, hidden from view — it looked like the tab was
+     jumping to a "random" spot on the page (found via user report) when it
+     was actually the correct section, just covered. scroll-margin-top
+     reserves that space so the browser stops short of the sticky bars. */
+  #overview, #chart, #financials, #valuation, #dividends, #performance, #company{
+    scroll-margin-top:120px;
+  }
   .subnav a{padding:12px 14px;font-size:13.5px;font-weight:600;color:var(--text-muted);border-bottom:2px solid transparent;}
   .subnav a:hover{color:var(--text);}
   .subnav a.active{color:var(--accent);border-bottom-color:var(--accent);}
@@ -180,7 +189,7 @@ function renderStockPage(s) {
 
   document.getElementById("page-body").innerHTML = `
     ${sampleBanner()}
-    <div class="stock-head">
+    <div id="overview" class="stock-head">
       <div class="stock-title">
         <span class="sym">${s.symbol}</span>
         <span class="name">${s.name}</span>
@@ -299,7 +308,7 @@ function renderStockPage(s) {
 
       <div>
         <div id="valuation" class="card verdict-card">
-          <div class="tag"><span class="pill ${verdictClass(s.valuation_verdict)}">${s.valuation_verdict || "—"}</span></div>
+          <div class="tag"><span class="pill pill-detail ${verdictClass(s.valuation_verdict)}">${s.valuation_verdict || "—"}</span></div>
           <div class="headline">${s.interpretation || "No interpretation available"}</div>
           <div class="explain-box" style="margin-top:10px;">${explainVerdict(s)}</div>
           <div class="sub" style="margin-top:10px;">This is not a buy/sell signal — see <a href="disclaimer.html" style="color:var(--accent);">important disclaimers</a>.</div>

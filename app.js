@@ -119,16 +119,37 @@ function verdictClass(v) {
   return "neutral";
 }
 
-/* ---------- nav / search (shared across pages) ---------- */
-function initNav() {
-  const input = document.getElementById("global-search");
-  const results = document.getElementById("search-results");
-  if (!input) return;
+// Table/list rows need a short, single-line verdict — the researched
+// flagship stocks carry a full-sentence reasoning (e.g. "Expensive vs
+// Cipla and Dr. Reddy's, priced for the pending Organon acquisition") that
+// looks fine on the stock's own page but breaks the compact pill shape in
+// a list (found via user report). Cut to the clause before the first
+// comma/semicolon, capped at 28 characters; the full text is still
+// available as the pill's hover tooltip.
+function verdictShort(v) {
+  if (!v) return "—";
+  let s = v.split(" (")[0].split(",")[0].split(";")[0];
+  if (s.length > 28) s = s.slice(0, 27).trimEnd() + "…";
+  return s;
+}
+
+/* ---------- nav / search (shared across pages) ----------
+   wireSearchBox() drives any search input + its results dropdown. Used for
+   the small nav-bar search box AND the big homepage hero search box, which
+   previously had no id/results element/listener at all — typing in it did
+   nothing (found via user report). Both boxes now share this one function
+   so a fix here applies everywhere. */
+function wireSearchBox(input, results) {
+  if (!input || !results) return;
   input.addEventListener("input", () => {
     const q = input.value.trim().toUpperCase();
     if (!q) { results.style.display = "none"; results.innerHTML = ""; return; }
     const matches = STOCKS.filter(s => s.symbol.includes(q) || s.name.toUpperCase().includes(q)).slice(0, 8);
-    if (!matches.length) { results.style.display = "none"; return; }
+    if (!matches.length) {
+      results.style.display = "block";
+      results.innerHTML = `<div style="padding:14px 16px;color:var(--text-muted);font-size:13px;">No matches for "${input.value.trim()}"</div>`;
+      return;
+    }
     results.innerHTML = matches.map(s => `
       <div class="search-row" data-symbol="${s.symbol}">
         <span class="sym">${s.symbol}</span>
@@ -138,10 +159,15 @@ function initNav() {
     results.style.display = "block";
   });
   document.addEventListener("click", (e) => {
-    if (!e.target.closest(".search-box") && !e.target.closest("#search-results")) {
+    if (!e.target.closest(".search-box") && !e.target.closest(".hero-search") && !results.contains(e.target)) {
       results.style.display = "none";
     }
   });
+}
+
+function initNav() {
+  wireSearchBox(document.getElementById("global-search"), document.getElementById("search-results"));
+  wireSearchBox(document.getElementById("hero-search-input"), document.getElementById("hero-search-results"));
 }
 
 function sampleBanner() {

@@ -121,10 +121,11 @@
     <span class="eyebrow">⚡ Nifty 200 · Free · Updated through the trading day</span>
     <h1>Explore the stock market <span class="grad-text">with clarity.</span></h1>
     <p class="sub">Prices, performance, financials and an AI-assisted screener for all 200 Nifty stocks — all in one place, all openly tested.</p>
-    <div class="hero-search">
+    <div class="hero-search" style="position:relative;z-index:5;">
       <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
-      <input type="text" placeholder="Search by company or ticker — e.g. RELIANCE, HDFC Bank">
+      <input id="hero-search-input" type="text" placeholder="Search by company or ticker — e.g. RELIANCE, HDFC Bank">
       <kbd>/</kbd>
+      <div id="hero-search-results" style="display:none;position:absolute;top:calc(100% + 8px);left:0;right:0;background:var(--card);border:1px solid var(--border);border-radius:10px;box-shadow:0 16px 40px -12px rgba(0,0,0,.6);overflow:hidden;z-index:10;text-align:left;"></div>
     </div>
     <div class="hero-tags">
       <a href="screener.html?screen=growth">Growth</a>
@@ -259,7 +260,7 @@ function renderExplore(filter) {
       <td class="num">${fmtPrice(s.current_price)}</td>
       <td class="chg ${chgClass(s.day_change_pct)} num">${fmtPct(s.day_change_pct)}</td>
       <td style="color:var(--text-muted);font-size:13px;">${s.sector}</td>
-      <td><span class="pill ${verdictClass(s.valuation_verdict)}">${(s.valuation_verdict||"—").split(" (")[0]}</span></td>
+      <td><span class="pill ${verdictClass(s.valuation_verdict)}" title="${(s.valuation_verdict||"").replace(/"/g,'&quot;')}">${verdictShort(s.valuation_verdict)}</span></td>
     </tr>`).join("");
 }
 

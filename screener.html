@@ -268,7 +268,7 @@ function renderResults(rows) {
       <td class="num">${fmtCap(s.market_cap)}</td>
       <td style="color:var(--text-muted);font-size:13px;">${s.sector}</td>
       <td class="num">${scoreBadge(s.ml_percentile)}</td>
-      <td><span class="pill ${verdictClass(s.valuation_verdict)}">${(s.valuation_verdict||"—").split(" (")[0]}</span></td>
+      <td><span class="pill ${verdictClass(s.valuation_verdict)}" title="${(s.valuation_verdict||"").replace(/"/g,'&quot;')}">${verdictShort(s.valuation_verdict)}</span></td>
     </tr>`).join("");
 }
 
