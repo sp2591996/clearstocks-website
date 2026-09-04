@@ -82,6 +82,37 @@ input.f-select:focus{border-color:var(--accent);}
 .sort-select{font-size:13px;font-family:"Inter",sans-serif;border:1px solid var(--border);border-radius:7px;padding:6px 10px;background:var(--card);color:var(--text);}
 th.sortable{cursor:pointer;user-select:none;}
 th.sortable:hover{color:var(--text);}
+
+/* On phones, an 8-column table (Symbol/Company/Price/Change/Cap/Sector/
+   Score/Verdict) either gets crushed unreadably narrow or forces sideways
+   scrolling on every row (found via user report: "200 stocks table...
+   looking a bit weird" on mobile). Real stock-app watchlists (Groww,
+   Zerodha Kite) solve this by turning each row into a compact 3-line card
+   instead: name+price on top, then change%, then score/verdict — no
+   horizontal scrolling, and it's the format phone users already expect
+   from every trading app. Market Cap and Sector are dropped from the
+   mobile card (still on the full stock page after a tap) since they're
+   the least glanced-at columns in a screener list. */
+@media (max-width:700px){
+  #results-table thead{display:none;}
+  #results-table, #results-table tbody{display:block;width:100%;}
+  #results-table tr{
+    display:grid;
+    grid-template-columns:1fr auto;
+    grid-template-areas:"sym price" "name chg" "score verdict";
+    row-gap:5px;column-gap:12px;
+    padding:14px 6px;border-bottom:1px solid var(--border);
+  }
+  #results-table td{display:block;border:none;padding:0;}
+  #results-table td.sym{grid-area:sym;font-size:15px;}
+  #results-table td.company-name{grid-area:name;font-size:12.5px;}
+  #results-table td:nth-child(3){grid-area:price;text-align:right;font-weight:700;font-size:15px;}
+  #results-table td:nth-child(4){grid-area:chg;text-align:right;}
+  #results-table td:nth-child(5),
+  #results-table td:nth-child(6){display:none;}
+  #results-table td:nth-child(7){grid-area:score;}
+  #results-table td:nth-child(8){grid-area:verdict;justify-self:end;max-width:100%;}
+}
 </style>
 </head>
 <body>

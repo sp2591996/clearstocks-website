@@ -71,6 +71,22 @@
   .summary-stat .lbl{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);font-weight:600;margin-bottom:4px;}
   .summary-stat .val{font-family:"IBM Plex Mono",monospace;font-size:16px;font-weight:600;}
   .summary-stat .val.dim{color:var(--text-muted);font-family:"Inter",sans-serif;font-size:13px;font-weight:500;}
+
+  /* The Financials tab's multi-year tables (5+ year columns) already
+     scroll sideways on a phone (overflow-x:auto), but the metric-name
+     column scrolled away with everything else, so once you swiped right
+     to see this year's numbers you lost sight of which row you were even
+     looking at (found via user report: financials table on mobile
+     "looking a bit weird"). Real finance apps (Groww, Screener.in) freeze
+     that label column in place while the numbers scroll underneath it —
+     same fix here, applied to every generated financial/comparison table. */
+  #fin-table-wrap table td:first-child, #fin-table-wrap table th:first-child,
+  #growth-table-wrap table td:first-child, #growth-table-wrap table th:first-child,
+  #common-size-wrap table td:first-child, #common-size-wrap table th:first-child,
+  #competitor-table-wrap table td:first-child, #competitor-table-wrap table th:first-child,
+  #forecast-wrap table td:first-child, #forecast-wrap table th:first-child{
+    position:sticky;left:0;background:var(--card);z-index:1;
+  }
 </style>
 </head>
 <body>
