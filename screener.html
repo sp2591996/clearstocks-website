@@ -48,6 +48,24 @@ select.f-select{
   width:100%;padding:8px 10px;border:1px solid var(--border);border-radius:7px;
   font-size:13.5px;font-family:"Inter",sans-serif;background:var(--card);color:var(--text);
 }
+/* input.f-select (the sidebar Search box) had no rule at all before this —
+   only the <select> variant above was styled, so it rendered as a raw,
+   unstyled browser default text box that clashed with the dark theme
+   (found via user report: "left side search is poor UI"). Give it the
+   same look as the other search boxes on the site (nav bar, homepage
+   hero), including the magnifying-glass icon. */
+.f-search-wrap{position:relative;}
+.f-search-wrap svg{
+  position:absolute;left:10px;top:50%;transform:translateY(-50%);
+  color:var(--text-muted);pointer-events:none;
+}
+input.f-select{
+  width:100%;padding:8px 10px 8px 32px;border:1px solid var(--border);border-radius:7px;
+  font-size:13.5px;font-family:"Inter",sans-serif;background:var(--card-2);color:var(--text);
+  outline:none;transition:border-color .12s;
+}
+input.f-select::placeholder{color:var(--text-muted);}
+input.f-select:focus{border-color:var(--accent);}
 .filter-reset{width:100%;margin-top:4px;}
 .results-head{display:flex;justify-content:space-between;align-items:center;padding:14px 18px;border-bottom:1px solid var(--border);flex-wrap:wrap;gap:10px;}
 .results-count{font-size:13.5px;color:var(--text-muted);}
@@ -107,7 +125,10 @@ th.sortable:hover{color:var(--text);}
     <aside class="card filters">
       <div class="f-group">
         <div class="f-label">Search</div>
-        <input class="f-select" id="filter-search" type="text" placeholder="Symbol or company">
+        <div class="f-search-wrap">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
+          <input class="f-select" id="filter-search" type="text" placeholder="Symbol or company">
+        </div>
       </div>
       <div class="f-group">
         <div class="f-label">Sector</div>
@@ -208,7 +229,12 @@ th.sortable:hover{color:var(--text);}
 const SUMMARY_SCREENS = {
   growth: s => s.roe != null && s.roe > 18,
   value: s => (s.valuation_verdict||"").startsWith("Cheap"),
-  strongest: s => (s.interpretation||"").startsWith("STRONGEST"),
+  // "High Insight Score + cheap valuation" (the card's own description) —
+  // previously checked for an "interpretation" value starting with the
+  // literal word "STRONGEST", which no stock's data ever actually
+  // contains (found via user report: card always showed 0 stocks). Score
+  // it directly from the two things the card promises instead.
+  strongest: s => s.ml_percentile != null && s.ml_percentile >= 55 && (s.valuation_verdict||"").startsWith("Cheap"),
   momentum: s => s.day_change_pct > 1.5,
   largecap: s => s.market_cap != null && s.market_cap > 200000,
   all: () => true,
