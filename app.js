@@ -169,6 +169,48 @@ function initNav() {
   wireSearchBox(document.getElementById("global-search"), document.getElementById("search-results"));
   wireSearchBox(document.getElementById("hero-search-input"), document.getElementById("hero-search-results"));
   initMobileNav();
+  initDataStatus();
+}
+
+// Populates the footer's "Live prices" / "Full data" timestamps. Fetches
+// its own data independently (rather than relying on loadStockData()
+// having already run) so the footer widget works the same way on every
+// page, including ones like Contact/Disclaimer that never call
+// loadStockData(). The "Refresh now" links next to these times are plain
+// <a> tags straight to each GitHub Actions workflow's page (see the HTML)
+// -- a static site has no server to safely trigger those jobs itself.
+async function initDataStatus() {
+  const priceEl = document.getElementById("ds-price-time");
+  const dataEl = document.getElementById("ds-data-time");
+  if (!priceEl && !dataEl) return;
+
+  if (priceEl) {
+    try {
+      const res = await fetch("live_prices.json", { cache: "no-store" });
+      if (res.ok) {
+        const live = await res.json();
+        priceEl.textContent = live.updated_at || "not yet run";
+      } else {
+        priceEl.textContent = "not yet run";
+      }
+    } catch (e) {
+      priceEl.textContent = "not yet run";
+    }
+  }
+
+  if (dataEl) {
+    try {
+      const res = await fetch("status.json", { cache: "no-store" });
+      if (res.ok) {
+        const status = await res.json();
+        dataEl.textContent = status.last_data_refresh || "not yet run";
+      } else {
+        dataEl.textContent = "not yet run";
+      }
+    } catch (e) {
+      dataEl.textContent = "not yet run";
+    }
+  }
 }
 
 // Drives the hamburger button + dropdown panel that replace the nav links

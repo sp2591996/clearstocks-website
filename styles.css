@@ -167,6 +167,31 @@ a{color:inherit;text-decoration:none;}
   min-width:0;
 }
 
+/* ---------- Data status bar (in the footer, every page) ----------
+   Two automated jobs keep this site's numbers fresh: a 15-minute live
+   price refresh and a weekly full data refresh. A static GitHub Pages
+   site has no server of its own, so a page button can't safely trigger
+   those jobs directly — doing that would mean shipping a GitHub write
+   token to every visitor's browser, which anyone could then read and
+   abuse. Instead these "Refresh now" links open the job's own GitHub
+   Actions page in a new tab, where clicking "Run workflow" (already
+   signed in as the repo owner) starts it — one extra click, but safe. */
+.data-status-bar{border-top:1px solid var(--border);background:var(--card);}
+.data-status{
+  max-width:1320px;margin:0 auto;padding:14px 28px;
+  display:flex;flex-wrap:wrap;gap:10px 32px;font-size:12.5px;
+}
+.ds-row{display:flex;align-items:center;gap:8px;color:var(--text-muted);}
+.ds-label{font-weight:600;color:var(--text);}
+.ds-time{font-family:"IBM Plex Mono",monospace;}
+.ds-btn{
+  padding:4px 11px;border-radius:6px;border:1px solid var(--border);
+  background:var(--card-2);color:var(--text);font-weight:600;font-size:11.5px;
+  white-space:nowrap;display:inline-flex;align-items:center;gap:4px;
+}
+.ds-btn:hover{border-color:var(--accent);color:var(--accent);}
+@media (max-width:600px){.data-status{padding:14px 16px;flex-direction:column;align-items:flex-start;gap:12px;}}
+
 /* ---------- Footer ---------- */
 footer{border-top:1px solid var(--border);margin-top:64px;}
 .footer-inner{
