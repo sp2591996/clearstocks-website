@@ -105,15 +105,30 @@ def fetch_one_stock_fundamentals(yf_symbol):
         for date_str, values in fetch_statement_rows(ticker, statement, rows).items():
             merged.setdefault(date_str, {}).update(values)
 
+    def clean(v):
+        """None AND pandas/NumPy NaN both mean "missing" here -- yfinance
+        returns actual NaN floats (not None) for a period a company didn't
+        report a line item for for. Treating only `is None` as missing let
+        real NaNs through as the literal text "nan" in the CSV (found by
+        the user reviewing the first real Pull Request this produced --
+        e.g. 360ONE's 2022 row: every field literally read "nan")."""
+        return None if v is None or (isinstance(v, float) and pd.isna(v)) else v
+
     rows_out = []
     for date_str in sorted(merged.keys()):
         r = merged[date_str]
-        net_income = r.get("Net Income")
-        equity = r.get("Stockholders Equity")
+        cleaned = {key: clean(r.get(key)) for key in ALL_METRIC_ROWS}
+        # A period where every single line item is missing (some yfinance
+        # tickers return a placeholder column with no real data at all)
+        # isn't a real fiscal year -- writing it out just adds a blank row
+        # for the site to render as a wall of "--". Skip it entirely.
+        if all(v is None for v in cleaned.values()):
+            continue
+        net_income, equity = cleaned.get("Net Income"), cleaned.get("Stockholders Equity")
         roe = (net_income / equity) if (net_income is not None and equity not in (None, 0)) else None
         row = {"Year": date_str}
         for key in ALL_METRIC_ROWS:
-            v = r.get(key)
+            v = cleaned[key]
             row[key] = "" if v is None else str(float(v))
         row["ROE"] = "" if roe is None else str(float(roe))
         rows_out.append(row)
