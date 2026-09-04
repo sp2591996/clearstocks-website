@@ -1,0 +1,61 @@
+# .github/workflows/refresh-prices.yml
+#
+# Runs fetch_live_prices.py automatically every 15 minutes during NSE
+# market hours (9:15am-3:30pm IST, Mon-Fri) and commits the refreshed
+# live_prices.json back to the repo. Because the website is hosted on
+# GitHub Pages straight from this repo, that commit is what makes the
+# "today" price/change numbers on the site move through the day — no
+# server, no separate hosting, all free.
+#
+# This does NOT touch ML scores or fundamentals — those only update
+# via the weekly data-refresh workflow. This workflow only ever
+# rewrites live_prices.json.
+
+name: Refresh live prices
+
+on:
+  schedule:
+    # Every 15 minutes, 03:45-10:00 UTC = 9:15am-3:30pm IST, every day.
+    # (GitHub Actions cron has no day-of-week timezone awareness, so the
+    # script itself checks IST weekday/time and exits quietly on
+    # weekends/holidays/off-hours rather than relying only on cron.)
+    - cron: '*/15 3-10 * * *'
+  workflow_dispatch: # lets you also trigger it manually from the Actions tab
+    inputs:
+      force:
+        description: 'Fetch even if markets are closed right now (for testing)'
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install yfinance pandas
+
+      - name: Fetch live prices
+        # On the scheduled (cron) runs, no --force: the script's own
+        # weekday/time check (Mon-Fri, 9:15am-3:30pm IST) is what keeps
+        # this from firing on weekends, since the cron schedule above
+        # runs every day and has no idea which days are weekdays. A
+        # manual "Run workflow" click defaults to force=true so you can
+        # test it any time.
+        run: python fetch_live_prices.py nifty200_list.csv live_prices.json ${{ github.event_name == 'workflow_dispatch' && inputs.force && '--force' || '' }}
+
+      - name: Commit updated prices (if changed)
+        run: |
+          git config user.name "clearstocks-bot"
+          git config user.email "actions@github.com"
+          git add live_prices.json
+          git diff --cached --quiet && echo "No price change - skipping commit" || git commit -m "Refresh live prices [automated]"
+          git push
