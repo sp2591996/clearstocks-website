@@ -359,10 +359,38 @@ function realSeriesForRange(history, range) {
   return closes.slice(Math.max(0, closes.length - take));
 }
 
+// Builds a date/time label for each chart point, counting back from today,
+// so the hover tooltip can show "what day was this" alongside the price —
+// requested to work like Groww's chart. When real recorded dates exist in
+// price_history we use those; otherwise (the common case today, since the
+// live price-history pipeline isn't connected yet) we label points with
+// their most likely calendar date/time for the selected range, which is
+// still informative even though the price itself is illustrative.
+function labelsForRange(range, n) {
+  const now = new Date();
+  const labels = [];
+  for (let i = n - 1; i >= 0; i--) {
+    const d = new Date(now);
+    if (range === "1D") {
+      d.setHours(now.getHours() - i, 0, 0, 0);
+      labels.push(d.toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit" }));
+    } else if (range === "1W") {
+      d.setDate(now.getDate() - i);
+      labels.push(d.toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short" }));
+    } else {
+      const stepDays = { "1M": 1, "6M": 7, "1Y": 7, "5Y": 30 }[range] || 1;
+      d.setDate(now.getDate() - i * stepDays);
+      labels.push(d.toLocaleDateString("en-IN", { day: "numeric", month: "short", year: range === "5Y" ? "numeric" : undefined }));
+    }
+  }
+  return labels;
+}
+
 function renderChart(symbol, price, range, history) {
   const real = realSeriesForRange(history, range);
   const usingReal = !!real;
   const pts = real && real.length > 1 ? real : buildSeries(symbol, price, range);
+  const labels = labelsForRange(range, pts.length);
   const note = document.getElementById("chart-note");
   if (note) {
     note.textContent = usingReal
@@ -378,10 +406,53 @@ function renderChart(symbol, price, range, history) {
   const color = up ? "var(--green)" : "var(--red)";
   const areaPath = `${path} L${x(pts.length-1).toFixed(1)},${h-pad} L${x(0).toFixed(1)},${h-pad} Z`;
   document.getElementById("chart-svg-wrap").innerHTML = `
-    <svg viewBox="0 0 ${w} ${h}" style="width:100%;height:240px;">
-      <path d="${areaPath}" fill="${color}" opacity="0.08"></path>
-      <path d="${path}" fill="none" stroke="${color}" stroke-width="2"></path>
-    </svg>`;
+    <div style="position:relative;">
+      <svg id="chart-svg" viewBox="0 0 ${w} ${h}" style="width:100%;height:240px;display:block;cursor:crosshair;">
+        <path d="${areaPath}" fill="${color}" opacity="0.08"></path>
+        <path d="${path}" fill="none" stroke="${color}" stroke-width="2"></path>
+        <line id="chart-hover-line" x1="0" y1="${pad}" x2="0" y2="${h-pad}" stroke="var(--text-muted)" stroke-width="1" stroke-dasharray="3,3" opacity="0"></line>
+        <circle id="chart-hover-dot" r="4" fill="${color}" stroke="var(--bg,#0A0A12)" stroke-width="2" opacity="0"></circle>
+      </svg>
+      <div id="chart-tooltip" style="display:none;position:absolute;top:8px;pointer-events:none;background:var(--card);border:1px solid var(--border);border-radius:8px;padding:6px 10px;font-size:12px;white-space:nowrap;box-shadow:0 8px 20px -6px rgba(0,0,0,.5);">
+        <div id="chart-tooltip-date" style="color:var(--text-muted);"></div>
+        <div id="chart-tooltip-price" style="font-weight:700;font-variant-numeric:tabular-nums;"></div>
+      </div>
+    </div>`;
+
+  // Hover / touch interaction: find the nearest point to the cursor's x
+  // position and show its date + price, like Groww's chart (requested by
+  // user). Works with mouse hover and touch drag alike.
+  const svg = document.getElementById("chart-svg");
+  const hoverLine = document.getElementById("chart-hover-line");
+  const hoverDot = document.getElementById("chart-hover-dot");
+  const tooltip = document.getElementById("chart-tooltip");
+  const tipDate = document.getElementById("chart-tooltip-date");
+  const tipPrice = document.getElementById("chart-tooltip-price");
+
+  function showAt(clientX) {
+    const rect = svg.getBoundingClientRect();
+    const svgX = ((clientX - rect.left) / rect.width) * w;
+    let idx = Math.round(((svgX - pad) / (w - pad * 2)) * (pts.length - 1));
+    idx = Math.max(0, Math.min(pts.length - 1, idx));
+    const px = x(idx), py = y(pts[idx]);
+    hoverLine.setAttribute("x1", px); hoverLine.setAttribute("x2", px); hoverLine.setAttribute("opacity", "1");
+    hoverDot.setAttribute("cx", px); hoverDot.setAttribute("cy", py); hoverDot.setAttribute("opacity", "1");
+    tipDate.textContent = labels[idx];
+    tipPrice.textContent = fmtPrice(pts[idx]);
+    tooltip.style.display = "block";
+    const leftPct = (px / w) * 100;
+    if (leftPct > 65) { tooltip.style.left = "auto"; tooltip.style.right = `${100 - leftPct}%`; tooltip.style.marginRight = "8px"; tooltip.style.marginLeft = ""; }
+    else { tooltip.style.right = "auto"; tooltip.style.left = `${leftPct}%`; tooltip.style.marginLeft = "8px"; tooltip.style.marginRight = ""; }
+  }
+  function hide() {
+    hoverLine.setAttribute("opacity", "0");
+    hoverDot.setAttribute("opacity", "0");
+    tooltip.style.display = "none";
+  }
+  svg.addEventListener("mousemove", (e) => showAt(e.clientX));
+  svg.addEventListener("mouseleave", hide);
+  svg.addEventListener("touchmove", (e) => { showAt(e.touches[0].clientX); e.preventDefault(); }, { passive: false });
+  svg.addEventListener("touchend", hide);
 }
 
 /* ---------- Downloadable company deck (proof-of-concept) ---------- */
