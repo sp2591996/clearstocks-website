@@ -168,6 +168,24 @@ function wireSearchBox(input, results) {
 function initNav() {
   wireSearchBox(document.getElementById("global-search"), document.getElementById("search-results"));
   wireSearchBox(document.getElementById("hero-search-input"), document.getElementById("hero-search-results"));
+  initMobileNav();
+}
+
+// Drives the hamburger button + dropdown panel that replace the nav links
+// on mobile (see styles.css .mobile-toggle / .mobile-nav-panel — the CSS
+// for these existed already but no button or menu logic did, so mobile
+// visitors had no way to navigate at all; found via user report).
+function initMobileNav() {
+  const toggle = document.getElementById("mobile-toggle");
+  const panel = document.getElementById("mobile-nav-panel");
+  if (!toggle || !panel) return;
+  toggle.addEventListener("click", () => panel.classList.toggle("open"));
+  panel.querySelectorAll("a").forEach(a => a.addEventListener("click", () => panel.classList.remove("open")));
+  document.addEventListener("click", (e) => {
+    if (!e.target.closest(".mobile-toggle") && !e.target.closest(".mobile-nav-panel")) {
+      panel.classList.remove("open");
+    }
+  });
 }
 
 function sampleBanner() {

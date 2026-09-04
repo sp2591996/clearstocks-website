@@ -39,6 +39,15 @@
 @media (max-width:900px){.layout{grid-template-columns:1fr;}}
 
 .filters{position:sticky;top:80px;}
+/* Below 900px the two-column layout stacks into one column, with the
+   filters card sitting above the results in normal document flow. Sticky
+   positioning still applied there, so once a phone user scrolled past the
+   filters card it pinned itself near the top of the screen and stayed
+   glued there, overlapping the results underneath as they kept scrolling
+   -- reported by user as the page "gets stuck" on the filter section.
+   Turning sticky off below 900px lets the filters card scroll normally
+   with the rest of the page, like everything else on mobile. */
+@media (max-width:900px){.filters{position:static;top:auto;}}
 .f-group{padding:16px 16px;border-bottom:1px solid var(--border);}
 .f-group:last-child{border-bottom:none;}
 .f-group .f-label{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.03em;color:var(--text);margin-bottom:10px;}
@@ -93,8 +102,17 @@ th.sortable:hover{color:var(--text);}
         <div id="search-results" style="display:none;position:absolute;top:calc(100% + 8px);right:0;width:320px;background:var(--card);border:1px solid var(--border);border-radius:10px;box-shadow:0 16px 40px -12px rgba(0,0,0,.6);overflow:hidden;"></div>
       </div>
       <a class="btn" href="contact.html">Contact</a>
+      <button id="mobile-toggle" class="mobile-toggle" aria-label="Menu">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="7" x2="20" y2="7"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="17" x2="20" y2="17"/></svg>
+      </button>
     </div>
   </div>
+  <div id="mobile-nav-panel" class="mobile-nav-panel">
+      <a href="index.html#markets">Markets</a>
+      <a href="screener.html" class="active">Screener</a>
+      <a href="how-it-works.html">How It Works</a>
+      <a href="about.html">About</a>
+      </div>
 </nav>
 
 <main class="container">

@@ -97,12 +97,32 @@ a{color:inherit;text-decoration:none;}
   box-shadow:0 6px 18px -6px rgba(124,58,237,.55);
 }
 .btn.primary:hover{box-shadow:0 10px 24px -6px rgba(124,58,237,.65);}
-.mobile-toggle{display:none;background:none;border:none;cursor:pointer;padding:6px;}
+/* The .mobile-toggle button existed in CSS but no page ever had the actual
+   button element, and nothing opened a menu when nav-links got hidden
+   below 960px — mobile visitors had NO way to reach Screener, How It
+   Works, About, or Contact at all (found via user report: "no clear tabs
+   on mobile"). This adds the real hamburger button + dropdown panel. */
+.mobile-toggle{display:none;background:none;border:none;cursor:pointer;padding:6px;color:var(--text);}
+.mobile-nav-panel{
+  display:none;position:absolute;top:100%;left:0;right:0;
+  background:var(--bg,#0A0A12);border-bottom:1px solid var(--border);
+  box-shadow:0 16px 32px -12px rgba(0,0,0,.6);z-index:100;
+}
+.mobile-nav-panel.open{display:block;}
+.mobile-nav-panel a{
+  display:block;padding:14px 20px;font-size:15px;font-weight:600;color:var(--text-muted);
+  border-bottom:1px solid var(--border);
+}
+.mobile-nav-panel a:last-child{border-bottom:none;}
+.mobile-nav-panel a:hover, .mobile-nav-panel a.active{color:var(--accent);background:var(--accent-bg);}
 
 @media (max-width:960px){
   .nav-links{display:none;}
   .search-box{min-width:0;width:150px;}
   .mobile-toggle{display:block;}
+}
+@media (min-width:961px){
+  .mobile-nav-panel{display:none !important;}
 }
 @media (max-width:600px){
   /* Below 600px there isn't room for the nav search box next to the logo
