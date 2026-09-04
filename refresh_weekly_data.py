@@ -253,7 +253,15 @@ def refresh_dashboard_data(fund_all, symbols_map):
             time.sleep(0.3)
 
     with open(DASH_PATH, "w", encoding="utf-8") as f:
-        json.dump(records, f)
+        # indent=2 matches generate_dashboard_data.py's original formatting.
+        # Writing this compact instead (no indent) collapsed the file from
+        # ~3,800 readable lines to 1 giant line -- every future weekly PR
+        # would then show as "replace the whole file" instead of the
+        # actual handful of changed numbers, defeating the point of
+        # reviewing the diff before merging (found via user's own PR
+        # review -- "what abt two red", i.e. the diff showing almost
+        # nothing but red/green bars with no readable content).
+        json.dump(records, f, indent=2)
     print(f"\n{DASH_PATH}: refreshed ROE on {updated} stocks" + (f", market snapshot failed for {market_failed}" if market_failed else ", market snapshot refreshed on all 10 researched stocks"))
 
 
