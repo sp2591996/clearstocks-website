@@ -53,19 +53,21 @@
   .related-card:hover{border-color:var(--accent);}
   .not-found{padding:80px 0;text-align:center;color:var(--text-muted);}
 
-  /* ---- Summary block: the one consistent block every stock page shows,
-     rich for the 10 researched flagship stocks, honestly pipeline-only
-     for the other 190. research-status tells the two apart at a glance. */
+  /* ---- Summary block: the one consistent block every stock page shows.
+     Every stock gets real ratios, a valuation verdict and a score the
+     moment the daily data refresh has numbers for it — none of that
+     waits on a PDF deck. research_status only changes which BADGE shows
+     (whether a human analyst has additionally written up the company's
+     profile/leadership/news), never whether the numbers/verdict appear. */
   .summary-card{padding:22px 24px;margin-bottom:20px;border-width:1px;}
   .summary-card.full{border-color:rgba(34,197,94,.35);}
-  .summary-card.pipeline{border-color:var(--border);}
+  .summary-card.automated{border-color:var(--border);}
   .summary-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:12px;}
   .research-badge{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;border-radius:20px;font-size:11.5px;font-weight:700;letter-spacing:.02em;text-transform:uppercase;}
   .research-badge.full{background:var(--green-bg);color:var(--green);}
-  .research-badge.pipeline{background:var(--card-2);color:var(--text-muted);border:1px solid var(--border);}
+  .research-badge.automated{background:var(--card-2);color:var(--text-muted);border:1px solid var(--border);}
   .research-badge .dot{width:6px;height:6px;border-radius:50%;background:currentColor;}
   .summary-text{font-size:14.5px;line-height:1.7;color:var(--text);}
-  .summary-card.pipeline .summary-text{color:var(--text-muted);}
   .summary-statrow{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:16px;padding-top:16px;border-top:1px solid var(--border);}
   @media (max-width:900px){.summary-statrow{grid-template-columns:repeat(2,1fr);}}
   .summary-stat .lbl{font-size:10.5px;text-transform:uppercase;letter-spacing:.04em;color:var(--text-muted);font-weight:600;margin-bottom:4px;}
@@ -190,22 +192,24 @@ function renderNotFound(symbol) {
 }
 
 /* ---------- Summary block: the one consistent block shown for all 200
-   stocks. research_status ("full" for the 10 researched flagship
-   stocks, "pipeline" for the other 190) decides the badge and framing —
-   the pipeline copy never claims a verdict or profile that doesn't
-   exist yet, it just says plainly what's real (the fundamentals below)
-   and what isn't (a scored verdict, a company profile). ---------- */
+   stocks. Ratios, verdict and score are computed from real data for
+   every stock daily and never wait on a PDF deck. research_status only
+   swaps the BADGE: "full" means a human analyst has additionally
+   written up the company's profile/leadership/news (and there's a
+   deck to read); otherwise it's "Automated Analysis" — real numbers,
+   not yet paired with a written analyst review. Deck availability is
+   its own separate has_deck flag, checked nowhere else on this page. */
 function renderSummaryBlock(s) {
   const isFull = s.research_status === "full";
   const badge = isFull
-    ? `<span class="research-badge full"><span class="dot"></span>Full Research</span>`
-    : `<span class="research-badge pipeline"><span class="dot"></span>Pipeline Data Only</span>`;
-  const deckLink = isFull
+    ? `<span class="research-badge full"><span class="dot"></span>Analyst Reviewed</span>`
+    : `<span class="research-badge automated"><span class="dot"></span>Automated Analysis</span>`;
+  const deckLink = s.has_deck
     ? `<a href="#" id="summary-deck-link" style="font-size:12.5px;color:var(--accent);font-weight:600;">Read the full company deck ↓</a>`
     : "";
   const roeVal = s.roe != null ? `${s.roe}%` : "—";
   return `
-    <div class="card summary-card ${isFull ? "full" : "pipeline"}">
+    <div class="card summary-card ${isFull ? "full" : "automated"}">
       <div class="summary-top">
         ${badge}
         ${deckLink}

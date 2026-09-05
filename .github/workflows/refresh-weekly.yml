@@ -52,6 +52,9 @@ jobs:
       - name: Run daily data refresh
         run: python refresh_weekly_data.py
 
+      - name: Compute automated valuation verdicts and scores for all 200 stocks
+        run: python compute_auto_scores.py
+
       - name: Open a Pull Request with the refreshed data (if anything changed)
         uses: peter-evans/create-pull-request@v6
         with:
