@@ -287,7 +287,7 @@ function renderExplore(filter) {
     </tr>`).join("");
 }
 
-function goToStock(symbol) { window.location.href = `stock.html?symbol=${symbol}`; }
+function goToStock(symbol) { window.location.href = `stock.html?symbol=${encodeURIComponent(symbol)}`; }
 
 (async function init() {
   await loadStockData();

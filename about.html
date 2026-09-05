@@ -95,6 +95,6 @@
 </footer>
 
 <script src="app.js"></script>
-<script>(async function(){ await loadStockData(); initNav(); document.body.addEventListener("click",e=>{const r=e.target.closest("[data-symbol]"); if(r) window.location.href=`stock.html?symbol=${r.dataset.symbol}`;}); })();</script>
+<script>(async function(){ await loadStockData(); initNav(); document.body.addEventListener("click",e=>{const r=e.target.closest("[data-symbol]"); if(r) window.location.href=`stock.html?symbol=${encodeURIComponent(r.dataset.symbol)}`;}); })();</script>
 </body>
 </html>

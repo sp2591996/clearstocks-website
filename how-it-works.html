@@ -129,7 +129,7 @@
   initNav();
   document.body.addEventListener("click", (e) => {
     const row = e.target.closest("[data-symbol]");
-    if (row) window.location.href = `stock.html?symbol=${row.dataset.symbol}`;
+    if (row) window.location.href = `stock.html?symbol=${encodeURIComponent(row.dataset.symbol)}`;
   });
 })();
 </script>

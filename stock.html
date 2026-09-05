@@ -877,7 +877,7 @@ function renderCompanyOverview(s, facts) {
 
   document.body.addEventListener("click", (e) => {
     const row = e.target.closest("[data-symbol]");
-    if (row && row.dataset.symbol !== symbol) window.location.href = `stock.html?symbol=${row.dataset.symbol}`;
+    if (row && row.dataset.symbol !== symbol) window.location.href = `stock.html?symbol=${encodeURIComponent(row.dataset.symbol)}`;
   });
 })();
 </script>

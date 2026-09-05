@@ -412,7 +412,7 @@ function renderResults(rows) {
   });
   document.body.addEventListener('click', (e) => {
     const row = e.target.closest('tr[data-symbol]');
-    if (row) window.location.href = `stock.html?symbol=${row.dataset.symbol}`;
+    if (row) window.location.href = `stock.html?symbol=${encodeURIComponent(row.dataset.symbol)}`;
   });
 })();
 </script>
