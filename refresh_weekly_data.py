@@ -14,24 +14,26 @@ The weekly "keep the numbers honest" refresh. Runs once a week (see
   2. fundamentals_all.json + company_facts.json — rebuilt from those
      CSVs (and from nifty200_list.csv), same shape the site already
      reads.
-  3. dashboard_data.json — for ALL 200 stocks, refreshes `roe` from
-     the latest fundamentals year (fundamentals-only, no live price
-     needed). For ONLY the 10 already-researched ("full") stocks, ALSO
-     refreshes pe_ratio, pb_ratio, market_cap, week52_high/low from
-     current market data, since those 10 are the ones a person has
-     actually reviewed and the site is comfortable showing valuation
-     ratios for.
+  3. dashboard_data.json — for ALL 200 stocks: refreshes `roe` from
+     the latest fundamentals year, AND pe_ratio, pb_ratio, market_cap,
+     week52_high/low from current market data. This runs for every
+     stock regardless of whether it has a research deck yet or not —
+     the PDF decks are a separate, manual step (generate_company_deck.py)
+     that simply reads whatever numbers are sitting here at build time.
 
      Deliberately NOT touched, for any stock: symbol, name, sector,
      research_status, valuation_verdict, interpretation, summary,
      has_deck, current_price, day_change_pct — those are either
      curated research text (only a human should change them) or owned
-     by the 15-minute live-price job. And for the other 190
-     ("pipeline") stocks, pe_ratio/pb_ratio/market_cap/week52 STAY
-     null on purpose — showing "Not yet scored" for a stock nobody has
-     actually reviewed is the honest state, not a bug to "fix" here.
-  4. status.json — records when this last ran successfully, so the
-     website's "Refresh now" panel can show it.
+     by the 15-minute live-price job. If a fetch fails for a stock,
+     its existing numbers are simply left as they were (never wiped to
+     null or a fake 0) and the failure is recorded visibly in
+     status.json's `last_refresh_failures` list — not just printed to
+     a log nobody reads.
+  4. status.json — records when this last ran, how many stocks
+     succeeded/failed, and which ones failed, so the website's
+     "Refresh now" panel (and you) can see at a glance whether
+     anything needs attention.
 
 This script only ever WRITES these files locally — the GitHub Actions
 workflow that calls it is the one that opens a Pull Request with the
@@ -210,9 +212,9 @@ def latest_roe_pct(fund_rows):
 
 
 def fetch_market_snapshot(yf_symbol):
-    """PE/PB/market cap/52-week range for the flagship stocks only —
-    uses the heavier `.info` call (fine at 10 stocks/week, unlike the
-    200-stock 15-min job which deliberately avoids it)."""
+    """PE/PB/market cap/52-week range for one stock, via the heavier
+    `.info` call. Now called for all 200 stocks once a day (previously
+    only ~10-15 "full" stocks once a week) — see module docstring."""
     ticker = yf.Ticker(yf_symbol)
     info = ticker.info or {}
     return {
@@ -228,8 +230,9 @@ def refresh_dashboard_data(fund_all, symbols_map):
     with open(DASH_PATH, encoding="utf-8") as f:
         records = json.load(f)
 
-    updated, market_failed = 0, []
-    for r in records:
+    updated, market_ok, market_failed = 0, 0, []
+    total = len(records)
+    for i, r in enumerate(records, 1):
         symbol = r["symbol"]
         fund_rows = fund_all.get(symbol)
         if fund_rows:
@@ -238,19 +241,33 @@ def refresh_dashboard_data(fund_all, symbols_map):
                 r["roe"] = roe
                 updated += 1
 
-        if r.get("research_status") == "full":
-            yf_symbol = symbols_map.get(symbol)
-            if not yf_symbol:
-                continue
+        # Market snapshot now runs for EVERY stock, not just "full" ones —
+        # a stock's research_status/has_deck is untouched either way, so
+        # this only ever adds real numbers, never fakes a deck that
+        # doesn't exist.
+        yf_symbol = symbols_map.get(symbol)
+        if yf_symbol:
             try:
                 snap = fetch_market_snapshot(yf_symbol)
+                got_any = False
                 for key, value in snap.items():
                     if value is not None:
                         r[key] = value
+                        got_any = True
+                if got_any:
+                    market_ok += 1
+                else:
+                    # yfinance didn't raise, but returned nothing usable —
+                    # just as much a failure as an exception, and the old
+                    # code silently treated this as a "success".
+                    print(f"  ! {symbol} market snapshot: empty response (no fields returned)")
+                    market_failed.append(symbol)
             except Exception as e:
                 print(f"  ! {symbol} market snapshot: {e}")
                 market_failed.append(symbol)
             time.sleep(0.3)
+        if i % 20 == 0:
+            print(f"  [{i}/{total}] market snapshots fetched...")
 
     with open(DASH_PATH, "w", encoding="utf-8") as f:
         # indent=2 matches generate_dashboard_data.py's original formatting.
@@ -262,10 +279,12 @@ def refresh_dashboard_data(fund_all, symbols_map):
         # review -- "what abt two red", i.e. the diff showing almost
         # nothing but red/green bars with no readable content).
         json.dump(records, f, indent=2)
-    print(f"\n{DASH_PATH}: refreshed ROE on {updated} stocks" + (f", market snapshot failed for {market_failed}" if market_failed else ", market snapshot refreshed on all 10 researched stocks"))
+    print(f"\n{DASH_PATH}: refreshed ROE on {updated} stocks, market snapshot ok on {market_ok}/{total}"
+          + (f", FAILED on {len(market_failed)}: {market_failed}" if market_failed else ""))
+    return market_ok, market_failed
 
 
-def write_status():
+def write_status(market_ok=None, market_failed=None, fund_failed=None):
     status = {}
     if os.path.exists(STATUS_PATH):
         try:
@@ -274,6 +293,14 @@ def write_status():
         except Exception:
             status = {}
     status["last_data_refresh"] = datetime.now(IST).strftime("%Y-%m-%d %H:%M IST")
+    if market_ok is not None:
+        status["last_refresh_market_ok_count"] = market_ok
+    if market_failed is not None:
+        status["last_refresh_market_failed_count"] = len(market_failed)
+        status["last_refresh_market_failed_symbols"] = market_failed
+    if fund_failed is not None:
+        status["last_refresh_fundamentals_failed_count"] = len(fund_failed)
+        status["last_refresh_fundamentals_failed_symbols"] = fund_failed
     with open(STATUS_PATH, "w", encoding="utf-8") as f:
         json.dump(status, f)
     print(f"Wrote {STATUS_PATH}")
@@ -287,16 +314,18 @@ def main():
     }
 
     print("Step 1/3: refreshing per-stock fundamentals history...")
-    refresh_fundamentals_history(symbols_map)
+    _, fund_failed = refresh_fundamentals_history(symbols_map)
 
     print("\nStep 2/3: rebuilding fundamentals_all.json + company_facts.json...")
     fund_all = rebuild_fundamentals_all_and_facts()
 
-    print("\nStep 3/3: refreshing dashboard_data.json (ROE for all, valuation ratios for the 10 researched stocks)...")
-    refresh_dashboard_data(fund_all, symbols_map)
+    print("\nStep 3/3: refreshing dashboard_data.json (ROE + valuation ratios for all 200 stocks)...")
+    market_ok, market_failed = refresh_dashboard_data(fund_all, symbols_map)
 
-    write_status()
-    print("\nDone.")
+    write_status(market_ok=market_ok, market_failed=market_failed, fund_failed=fund_failed)
+    print(f"\nDone. Market snapshot: {market_ok}/{len(symbols_map)} ok, {len(market_failed)} failed.")
+    if market_failed:
+        print(f"Failed symbols: {market_failed}")
 
 
 if __name__ == "__main__":

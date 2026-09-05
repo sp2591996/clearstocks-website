@@ -1,30 +1,35 @@
 # .github/workflows/refresh-weekly.yml
 #
-# Runs once a week and refreshes the numbers behind the site that
+# Runs once a DAY and refreshes the numbers behind the site that
 # aren't the live intraday price (that's refresh-prices.yml):
 #   - each stock's own reported financial history (revenue, profit,
 #     debt, cash flow, ROE, ...) -> fundamentals_history/*.csv,
 #     fundamentals_all.json
 #   - company_facts.json (name/industry/ISIN lookup)
-#   - dashboard_data.json: ROE refreshed for all 200 stocks, and
-#     PE/PB/market cap/52-week range refreshed for the 10 stocks
-#     that have actually been researched (the other 190 stay marked
-#     "Not yet scored" on purpose, until they get properly researched)
+#   - dashboard_data.json: ROE AND PE/PB/market cap/52-week range
+#     refreshed for ALL 200 stocks, whether or not that stock has a
+#     research deck yet -- deck status and refresh status are two
+#     separate things now.
 #
 # This does NOT touch curated research text (verdicts, summaries) and
-# does NOT regenerate the PDF decks — those are separate, manual steps.
+# does NOT regenerate the PDF decks -- those are separate, manual steps
+# (a deck is simply built using whatever numbers are here at the time).
 #
 # Unlike the 15-minute price refresh, this one is NOT auto-pushed: it
 # opens a Pull Request instead, so you can glance over the diff and
 # hit Merge yourself. A wrong price self-corrects in 15 minutes; a bad
 # fundamentals fetch is worth a second look first.
+#
+# If any stock's fetch fails, it no longer disappears into the log
+# unnoticed: status.json records last_refresh_market_failed_symbols
+# so it's visible on the site's own "Refresh now" panel.
 
 name: Weekly data refresh
 
 on:
   schedule:
-    # Every Monday, 02:00 UTC (~7:30am IST) — before the trading day starts.
-    - cron: '0 2 * * 1'
+    # Every day, 02:00 UTC (~7:30am IST) — before the trading day starts.
+    - cron: '0 2 * * *'
   workflow_dispatch: {} # lets you also trigger it manually from the Actions tab
 
 permissions:
@@ -44,22 +49,25 @@ jobs:
       - name: Install dependencies
         run: pip install yfinance pandas
 
-      - name: Run weekly data refresh
+      - name: Run daily data refresh
         run: python refresh_weekly_data.py
 
       - name: Open a Pull Request with the refreshed data (if anything changed)
         uses: peter-evans/create-pull-request@v6
         with:
-          commit-message: "Weekly data refresh [automated]"
-          title: "Weekly data refresh"
+          commit-message: "Daily data refresh [automated]"
+          title: "Daily data refresh"
           body: |
-            Automated weekly refresh of fundamentals, ROE, and (for the
-            10 researched stocks) valuation ratios. No curated research
-            text or PDF decks were touched.
+            Automated daily refresh of fundamentals, ROE, and valuation
+            ratios (PE, PB, market cap, 52-week range) for all 200
+            stocks. No curated research text or PDF decks were touched.
+
+            If any stocks failed to refresh, they're listed in
+            status.json under last_refresh_market_failed_symbols -- check
+            there if a stock's numbers look stale after merging.
 
             Review the diff, then click **Merge pull request** to publish
-            it to the live site — or close this PR to skip this week's
-            refresh.
+            it to the live site — or close this PR to skip this refresh.
           branch: weekly-data-refresh
           delete-branch: true
           add-paths: |
